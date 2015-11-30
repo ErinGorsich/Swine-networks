@@ -1,0 +1,571 @@
+inv$Value<-as.numeric(inv$Value)
+head(inv)
+inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
+head(inv)
+inv$Value<-as.numeric(as.character(inv$Value))
+head(inv)
+summary(inv)
+inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
+inv<-get_useful_parts(inv)
+head(inv)
+summary(inv)
+inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
+inv<-get_useful_parts(inv)
+head(inv)
+summary(inv)
+inv[!is.na(inv$value)]
+head(inv)
+inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
+length(inv[,1])
+length(inv$Value[!is.na(inv$Valuee)])
+inv$Value<-as.numeic(as.character(inv$Value))
+inv$Value<-as.numeric(as.character(inv$Value))
+head(inv)
+length(inv$Value)
+length(inv$Value[!is.na(inv$Value)])
+test<-inv[!is.na(inv$Value),]
+length(test[,1])
+test$Value2<-as.numeric(gsub(",", "", test$Value))
+head(test)
+summary(test)
+head(test)
+newcol<-NA#
+standardize<-function(column){#
+	for (i in 1:length(column)){#
+	newcol[i]<-(column[i]-mean(column))/sd(column)#
+}#
+	return(newcol)#
+}#
+#
+newdataframe<-NA#
+get_useful_parts<-function(dataframe){#
+	###########################
+	### This function takes a dataframe.  It#
+	#  1) extracts the useful columns (value, State/County ID/ Value),#
+	# 	2) makes a new column, valsd, containing standardized version of Value, 3) creates a new column,#
+	# FIPS= complete county ID that should match our datasets, and 4) returs a clean dataset.  #
+	### Ins/Outs#
+	# Input= dataframe directly downloaded from NASS#
+	# Name as output an INFORMATIVE name!!!!  I do not keep track of what things are what!#
+	###########################
+#
+	# Clean dataframe by removing NAs#
+	dataframe<-dataframe[dataframe$Geo.Level=="COUNTY",]#
+	dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  #
+	# Get rid of commas in the Value column, standardize the Value, put in new column, "valsd"#
+	dataframe$Value<-as.numeric(as.character(dataframe$Value))#
+	dataframe<-dataframe[!is.na(dataframe$Value),]  # repeat, some NAs not removed earlier#
+	dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))#
+	dataframe$valsd<-standardize(dataframe$Value2)#
+	dataframe$FIPS<-NA#
+	# create FIPS column, that merges the StateID and column ID#
+	for (i in 1:length(dataframe[,1])){#
+		if (dataframe$County.ANSI[i]<10) {#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="00")#
+	}#
+	else if (dataframe$County.ANSI[i]<100 & dataframe$County.ANSI[i]>=10){#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="0")#
+	}#
+	else {dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="")#
+		}	#
+	}#
+	# Subset and rename things so it is easier to work with#
+	newdataframe<- dataframe[,colnames(dataframe) %in% c("Year", "State.ANSI", "County.ANSI", "Value2", "valsd", "FIPS")]#
+	new= data.frame(FIPS= newdataframe$FIPS, year= newdataframe$Year, stateFIPS=newdataframe$State.ANSI, countyFIPS=newdataframe$County.ANSI, value=newdataframe$Value2, valuesd=newdataframe$valsd)#
+	return(new)#
+}
+inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
+inv2<-get_useful_parts(inv)
+head(inv2)
+inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")
+head(inv_p)
+summary(inv_p)
+length(inv_p[,1])
+length(inv_p$Year[inv_p$Year=="2012"])
+inv_p<-get_useful_parts(inv_p[inv_p$Year=="2012",])
+head(inv_p)
+inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")
+inv_p<-inv_p[inv_p$Year=="2012",]
+inv_p2<-get_useful_parts(inv_p)
+head(inv_p)
+head(inv_p2)
+summary(inv_p)
+inv_p$test<-as.numeric(as.character(inv$Value))
+summary(inv_p)
+inv_p$test<-as.numeric(as.character(inv_p$Value))
+summary(inv_p)
+inv_p$test<-as.character(inv_p$Value)
+summary(inv_p)
+head(inv_p)
+get_useful_parts<-function(dataframe){#
+	###########################
+	### This function takes a dataframe.  It#
+	#  1) extracts the useful columns (value, State/County ID/ Value),#
+	# 	2) makes a new column, valsd, containing standardized version of Value, 3) creates a new column,#
+	# FIPS= complete county ID that should match our datasets, and 4) returs a clean dataset.  #
+	### Ins/Outs#
+	# Input= dataframe directly downloaded from NASS#
+	# Name as output an INFORMATIVE name!!!!  I do not keep track of what things are what!#
+	###########################
+#
+	# Clean dataframe by removing NAs#
+	dataframe<-dataframe[dataframe$Geo.Level=="COUNTY",]#
+	dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  #
+	# Get rid of commas in the Value column, standardize the Value, put in new column, "valsd"#
+	dataframe$Value<-as.character(dataframe$Value)#
+	dataframe<-dataframe[!is.na(dataframe$Value),]  # repeat, some NAs not removed earlier#
+	dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))#
+	dataframe$valsd<-standardize(dataframe$Value2)#
+	dataframe$FIPS<-NA#
+	# create FIPS column, that merges the StateID and column ID#
+	for (i in 1:length(dataframe[,1])){#
+		if (dataframe$County.ANSI[i]<10) {#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="00")#
+	}#
+	else if (dataframe$County.ANSI[i]<100 & dataframe$County.ANSI[i]>=10){#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="0")#
+	}#
+	else {dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="")#
+		}	#
+	}#
+	# Subset and rename things so it is easier to work with#
+	newdataframe<- dataframe[,colnames(dataframe) %in% c("Year", "State.ANSI", "County.ANSI", "Value2", "valsd", "FIPS")]#
+	new= data.frame(FIPS= newdataframe$FIPS, year= newdataframe$Year, stateFIPS=newdataframe$State.ANSI, countyFIPS=newdataframe$County.ANSI, value=newdataframe$Value2, valuesd=newdataframe$valsd)#
+	return(new)#
+}
+inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
+inv2<-get_useful_parts(inv)
+head(inv2)
+get_useful_parts<-function(dataframe){#
+	###########################
+	### This function takes a dataframe.  It#
+	#  1) extracts the useful columns (value, State/County ID/ Value),#
+	# 	2) makes a new column, valsd, containing standardized version of Value, 3) creates a new column,#
+	# FIPS= complete county ID that should match our datasets, and 4) returs a clean dataset.  #
+	### Ins/Outs#
+	# Input= dataframe directly downloaded from NASS#
+	# Name as output an INFORMATIVE name!!!!  I do not keep track of what things are what!#
+	###########################
+#
+	# Clean dataframe by removing NAs#
+	dataframe<-dataframe[dataframe$Geo.Level=="COUNTY",]#
+	dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  #
+	# Get rid of commas in the Value column, standardize the Value, put in new column, "valsd"#
+	dataframe$Value<-as.character(dataframe$Value)#
+	dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))#
+	dataframe<-dataframe[!is.na(dataframe$Value2),]  # repeat, some NAs not removed earlier#
+	dataframe$valsd<-standardize(dataframe$Value2)#
+	dataframe$FIPS<-NA#
+	# create FIPS column, that merges the StateID and column ID#
+	for (i in 1:length(dataframe[,1])){#
+		if (dataframe$County.ANSI[i]<10) {#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="00")#
+	}#
+	else if (dataframe$County.ANSI[i]<100 & dataframe$County.ANSI[i]>=10){#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="0")#
+	}#
+	else {dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="")#
+		}	#
+	}#
+	# Subset and rename things so it is easier to work with#
+	newdataframe<- dataframe[,colnames(dataframe) %in% c("Year", "State.ANSI", "County.ANSI", "Value2", "valsd", "FIPS")]#
+	new= data.frame(FIPS= newdataframe$FIPS, year= newdataframe$Year, stateFIPS=newdataframe$State.ANSI, countyFIPS=newdataframe$County.ANSI, value=newdataframe$Value2, valuesd=newdataframe$valsd)#
+	return(new)#
+}
+inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
+inv2<-get_useful_parts(inv)
+head(inv2)
+toMatch <- c("A1", "A9", "A6")
+matches <- unique (grep(paste(toMatch,collapse="|"), #
+                        myfile$Letter, value=TRUE))
+head(inv_p)
+toMatch <- c("(D)", ",")
+matches <- unique(grep(paste(toMatch,collapse="|"), #
+                        inv_p$Value, value=TRUE))
+matches
+head(inv_p)
+summary(inv_p)
+test<-inv_p[inv_p$Value!="(D)",]
+summary(test)
+inv_p$Value<-as.character(inv_p$Value)
+summary(inv_p)
+test<-inv_p[inv_p$Value!="(D)",]
+summary(test)
+head(test, 20)
+head(test[test$Value=="(D)"])
+head(test[test$Value=="(D)",])
+head(test[test$Value==(D),])
+inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")
+inv_p<-inv_p[inv_p$Year=="2012",]
+head(inv_p)
+summary(inv_p)
+inv_p$Value<-as.character(inv_p$Value)
+test<-inv_p[inv_p$Value!="(D)",]
+head(test, 10)
+test$Value2<-	gsub("(D)", "NA", test$Value))
+test$Value2<-	gsub("(D)", "NA", test$Value)
+head(test)
+test$Value3<-as.numeric(gsub(",", "", dataframe$Value2))
+test$Value3<-as.numeric(gsub(",", "", test$Value2))
+head(test)
+test$Value4<-as.numeric(gsub(",", "", test$Value))
+inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")
+inv_p<-inv_p[inv_p$Year=="2012",]
+inv_p2<-get_useful_parts(inv_p)
+head(inv_p2)
+inv_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_feeder_hogs_JUSTUSETOTAL.csv")
+summary(inv_f)
+head(inv_f)
+tail(inv_f)
+inv_b<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_breeding_hogs_2DOMAINS!.csv")
+summary(inv_b)
+op<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_Inventory.csv")#
+op_p<-read.csv("~/Documents/post-doc/Swine/NASS/2012_NASS_HOGS_Operations_with_production.csv")#
+op_b<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_wtih_breeding_inventory.csv")#
+op_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_with_farrowtofeeder_inventory.csv")
+summary(op)
+op2<-get_useful_parts(op)
+head(op2)
+summary(op_p)
+op_p2<-get_useful_parts(op_p)
+summary(op_b)
+summary(op_b[op_b$Geo.Level=="COUNTY",])
+op_b<-op_b[op_b$Year=="2012" & op_b$Domain=="TOTAL",]
+summary(op_b)
+op_b2<-get_useful_parts(op_b)
+op_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_with_farrowtofeeder_inventory.csv")
+summary(op_f)
+ns2010<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2010.csv")#
+ns2011<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2011all.csv")
+summary(ns2010)
+head(inv2)
+ns2010$inv<-inv2$value[match(inv2$FIPS, ns2010$NodeID)]#
+ns2010$inv_p<-inv_p2$value[match(inv_p2$FIPS, ns2010$NodeID)]#
+ns2010$op<-op2$value[match(op2$FIPS, ns2010$NodeID)]#
+ns2010$op_p<- op_p2$value[match(op_p2$FIPS, ns2010$NodeID)]#
+ns2010$op_b<-op_b2$value[match(op_b2$FIPS, ns2010$NodeID)]
+ns2010$inv<-inv2$value[match(ns2010$NodeID, inv2$FIPS)]
+ns2010$inv<-inv2$value[match(ns2010$NodeID, inv2$FIPS)]#
+ns2010$inv_p<-inv_p2$value[match(ns2010$NodeID, inv_p2$FIPS)]#
+ns2010$op<-op2$value[match(ns2010$NodeID, op2$FIPS)]#
+ns2010$op_p<- op_p2$value[match(ns2010$NodeID, op_p2$FIPS)]#
+ns2010$op_b<-op_b2$value[match(ns2010$NodeID, op_b2$FIPS)]
+summary(ns2010)
+colnames(ns2010)
+net<-ns2010[,c(4,5,7,8,13)]#
+nass<-ns2010[,c(20:24)]
+head(nass)
+head(net)
+?corr
+??cor
+?cor
+cor(net[,1], nass[,1], na.rm=TRUE)
+cor(net[,1], nass[,1], method="pearson")
+?cor.test
+cor.test(net[,1], nass[,1], method="pearson")
+a<-cor.test(net[,1], nass[,1], method="pearson")
+str(a)
+a$conf.int[1]
+a$conf.int[2]
+window <- 5#
+ng <- 15 #or ncol(g)#
+xy <- data.frame(first = pmax( (1:ng) - window, 1 ), #
+                  last = pmin( (1:ng) + window, ng) )
+xy
+results <- list()#
+for(i in 1:nrow(xy)) {#
+  results[[i]] <- xy$first[i] : xy$last[i]#
+}#
+results
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval, method=pearson)#
+	return(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+}
+get_corr(net[,1], nass[,1])
+results<-list(NA)#
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	return(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+}
+get_corr(net[,1], nass[,1])
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-c(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+	return(results) 	#
+}
+?lapply
+?sapply
+?apply
+?apply
+?lapply
+?mapply
+listA <- list(matrix(rnorm(2000), nrow=10),#
+              matrix(rnorm(2000), nrow=10))#
+listB <- list(matrix(rnorm(2000), nrow=10),#
+              matrix(rnorm(2000), nrow=10))#
+mapply(function(X,Y) {#
+  sapply(1:10, function(row) cor(X[row,], Y[row,]))#
+  }, X=listA, Y=listB)
+?sapply
+net<-ns2010[,c(4,5,7,8,13)]#
+nass<-ns2010[,c(20:24)]#
+# want cor.test over each column#
+cor.test(net[,1], nass[,1], method="pearson")#
+out<-list(NA)#
+#
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-c(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+	return(results) 	#
+}#
+#
+for (i in 1:length(net)){#
+	for (j in 1:length(nass)){#
+		out[[i]]<-get_corr(netval=net[,i], nassval=nass[,j])#
+	}#
+}
+out
+cor.test(net[,1], nass[,1], method="pearson")
+head(net)
+head(nass)
+lnet<-5 #
+lnass<- 5#
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		out10[[i,j]]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		out11[[i,j]]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+#
+	}
+}
+net10<-ns2010[,c(4,5,7,8,13)]; net11<-ns2011[,c(4,5,7,8,13)]#
+nass10<-ns2010[,c(20:24)]; nass11<-ns2011[,c(20:24)]#
+# want cor.test over each column#
+cor.test(net10[,1], nass10[,1], method="pearson")#
+out10<-list(NA); out11<-list
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-c(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+	return(results) 	#
+}
+lnet<-5 #
+lnass<- 5#
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		out10[[i,j]]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		out11[[i,j]]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-paste(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value, sep=",")#
+	return(results) 	#
+}
+get_corr(net[,1], nass[,1])
+out10<-matrix(NA); out11<-matrix(NA)
+lnet<-5 #
+lnass<- 5#
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		out10[[i,j]]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		out11[[i,j]]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+nass10<-ns2010[,c(20:24)]; nass11<-ns2011[,c(20:24)]
+ns2011<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2011all.csv")#
+ns2011$inv<-inv2$value[match(ns2011$NodeID, inv2$FIPS)]#
+ns2011$inv_p<-inv_p2$value[match(ns2011$NodeID, inv_p2$FIPS)]#
+ns2011$op<-op2$value[match(ns2011$NodeID, op2$FIPS)]#
+ns2011$op_p<- op_p2$value[match(ns2011$NodeID, op_p2$FIPS)]#
+ns2011$op_b<-op_b2$value[match(ns2011$NodeID, op_b2$FIPS)]
+nass10<-ns2010[,c(20:24)]; nass11<-ns2011[,c(20:24)]
+net10<-ns2010[,c(4,5,7,8,13)]; net11<-ns2011[,c(4,5,7,8,13)]
+net10<-ns2010[,c(4,5,7,8,13)]; net11<-ns2011[,c(4,5,7,8,13)]
+# want cor.test over each column#
+cor.test(net10[,1], nass10[,1], method="pearson")#
+out10<-matrix(NA); out11<-matrix(NA)#
+#
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-paste(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value, sep=",")#
+	return(results) 	#
+}
+lnet<-5 #
+lnass<- 5#
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		out10[[i,j]]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		out11[[i,j]]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+lnet<-5 #
+lnass<- 5#
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		out10[i,j]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		out11[i,j]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-c(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+	return(results) 	#
+}
+get_corr(net[,1], nass[,1])
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-c(temp$estimate[1], temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+	return(results) 	#
+}
+get_corr(net[,1], nass[,1])
+temp
+cor.test(net10[,1], nass10[,1], method="pearson")
+a<-cor.test(net10[,1], nass10[,1], method="pearson")
+a$estimate
+a$estimate[1]
+a$estimate[[1]]
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-c(temp$estimate[[1]], temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+	return(results) 	#
+}
+cor.test(net10[,1], nass10[,1], method="pearson")
+get_corr(net[,1], nass[,1])
+lnet<-5 #
+lnass<- 5#
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		out10[[i]][j,]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		out11[[i]][j,]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+out10<-list(NA); out11<-list(NA)
+myarr <- array(,dim=c(3,5,10))#
+for (j in 1:5) for (k in 1:10) myarr[,j,k] <- rnorm(3)
+myarr
+arr10<-array(,dim=c(lnass, 4, lnet)); arr11<-list(NA)
+arr10
+?array
+colnames(lnass)
+colnames(nass10)
+?array
+lnet<-5 #
+lnass<- 5#
+arr10<-array(,dim=c(lnass, 4, lnet), dimnames=list(colnames(nass10), c("est", "LCI", "UCI", "p")));
+arr1-
+arr10
+arr11<-arr10
+arr11
+head(nass10)
+summary(nass10)
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		arr10[,j,i]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		arr11[,j,i]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+arr10[1,,]
+arr10[1,1,]
+arr10[1,,1]
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		arr10[i,,j]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		arr11[i,,j]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+arr10
+inv_b<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_breeding.csv")
+summary(inv_b)
+inv_b2<-get_useful_parts(inv_b)
+summary(inv_b2)
+ns2010$inv_b<-inv_b2$value[match(ns2010$NodeID, inv_b2$FIPS)]
+ns2011$inv_b<-inv_b2$value[match(ns2011$NodeID, inv_b2$FIPS)]
+head(ns2010)
+ns2010<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2010.csv")#
+ns2010$inv<-inv2$value[match(ns2010$NodeID, inv2$FIPS)]#
+ns2010$inv_p<-inv_p2$value[match(ns2010$NodeID, inv_p2$FIPS)]#
+ns2010$inv_b<-inv_b2$value[match(ns2010$NodeID, inv_b2$FIPS)]#
+ns2010$op<-op2$value[match(ns2010$NodeID, op2$FIPS)]#
+ns2010$op_p<- op_p2$value[match(ns2010$NodeID, op_p2$FIPS)]#
+ns2010$op_b<-op_b2$value[match(ns2010$NodeID, op_b2$FIPS)]#
+#
+ns2011<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2011all.csv")#
+ns2011$inv<-inv2$value[match(ns2011$NodeID, inv2$FIPS)]#
+ns2011$inv_p<-inv_p2$value[match(ns2011$NodeID, inv_p2$FIPS)]#
+ns2011$inv_b<-inv_b2$value[match(ns2011$NodeID, inv_b2$FIPS)]#
+#
+ns2011$op<-op2$value[match(ns2011$NodeID, op2$FIPS)]#
+ns2011$op_p<- op_p2$value[match(ns2011$NodeID, op_p2$FIPS)]#
+ns2011$op_b<-op_b2$value[match(ns2011$NodeID, op_b2$FIPS)]
+nass10<-ns2010[,c(20:25)]; nass11<-ns2011[,c(20:25)]
+head(nass10)
+lnet<-6 #
+lnass<- 6#
+arr10<-array(,dim=c(lnass, 4, lnet), dimnames=list(colnames(nass10), c("est", "LCI", "UCI", "p")))#
+arr11<-arr10#
+# one matrix per network property- 4 columns per array with answers to get_corr#
+# each row is a comparison to lnas column namae#
+#
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		arr10[i,,j]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		arr11[i,,j]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+arr10
+lnet<-5 #
+lnass<- 6#
+arr10<-array(,dim=c(lnass, 4, lnet), dimnames=list(colnames(nass10), c("est", "LCI", "UCI", "p")))#
+arr11<-arr10#
+# one matrix per network property- 4 columns per array with answers to get_corr#
+# each row is a comparison to lnas column namae#
+#
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		arr10[i,,j]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		arr11[i,,j]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+arr10
+arr[1,,]
+arr10[1,,]
+arr10[1,,1]
+arr10<-NA
+arr11<-NA
+net10<-ns2010[,c(4,5,7,8,13)]; net11<-ns2011[,c(4,5,7,8,13)]#
+nass10<-ns2010[,c(20:25)]; nass11<-ns2011[,c(20:25)]
+head(net10)
+head(nass10)
+# want cor.test over each column#
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-c(temp$estimate[[1]], temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+	return(results) 	#
+}
+lnet<-5 #
+lnass<- 6#
+arr10<-array(,dim=c(lnass, 4, lnet), dimnames=list(colnames(nass10), c("est", "LCI", "UCI", "p")))#
+arr11<-arr10#
+# one matrix per network property- 4 columns per array with answers to get_corr#
+# each row is a c
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		arr10[i,,j]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		arr11[i,,j]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+arr10
+arr10[,,1]
+arr10[1,,]
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		arr10[j,,i]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		arr11[j,,i]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+arr10
+net10
+head(net10)
+get_corr(net10[,1], nass10[,1])
+get_corr(net10[,2], nass10[,1])
+arr2011
+arr11
