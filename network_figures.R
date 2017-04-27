@@ -16,34 +16,32 @@ library(SDMTools)
 #############################################
 # Figure 1: Histogram of shipment size, overall
 #############################################
- ###############################################
-  # read in data
-    setwd("~/Documents/post-doc/Swine")
-  # Read in data
-  data.cvi<-read.csv("Swine_cvi_final.csv")
-  data.cvi= data.cvi[!is.na(data.cvi$NUM_SWINE),]  #-1
-  data.cvi=data.cvi[data.cvi$NUM_SWINE>0,] # -13
-  data.cvi=data.cvi[!is.na(data.cvi$SAMPLE_YEAR2),]  #-38 
-  data.cvi=data.cvi[data.cvi$NUM_SWINE>0,]
-  summary(data.cvi)
-  colnames(data.cvi)
-  # make a new column of all ones that represents the number of shipments
-  data.cvi$MOVE <-1
-  data.cvi<-data.cvi[, c("STATE", "SAMPLE_YEAR2", "PURPOSE", "NUM_SWINE", "NUM_BOAR", 
-               "NUM_BARROW", "NUM_GILT", "NUM_SOW", "NUM_AGE_0.2_MONTHS", 
-               "NUM_AGE_2.6_MONTHS", "NUM_AGE_6._MONTHS", "NUM_MALE", "NUM_FEMALE",
-               "D_STATE", "D_FIPS_X", "D_FIPS_Y",  "O_FIPS_X", "O_FIPS_Y", "O_STATE", 
-               "D_FIPS", "O_FIPS", "O_ST_FIPS", "D_ST_FIPS", "move" )]
+###############################################
+# read in data
+setwd("~/Documents/post-doc/Swine")
+# Read in data
+data.cvi<-read.csv("Swine_cvi_final.csv")
+data.cvi= data.cvi[!is.na(data.cvi$NUM_SWINE),]  #-1
+data.cvi=data.cvi[data.cvi$NUM_SWINE>0,] # -13
+data.cvi=data.cvi[!is.na(data.cvi$SAMPLE_YEAR2),]  #-38 
+data.cvi=data.cvi[data.cvi$NUM_SWINE>0,]
+summary(data.cvi)
+colnames(data.cvi)
+# make a new column of all ones that represents the number of shipments
+data.cvi$MOVE <-1
+data.cvi<-data.cvi[, c("STATE", "SAMPLE_YEAR2", "PURPOSE", "NUM_SWINE", "NUM_BOAR", 
+    "NUM_BARROW", "NUM_GILT", "NUM_SOW", "NUM_AGE_0.2_MONTHS", 
+    "NUM_AGE_2.6_MONTHS", "NUM_AGE_6._MONTHS", "NUM_MALE", "NUM_FEMALE",
+    "D_STATE", "D_FIPS_X", "D_FIPS_Y",  "O_FIPS_X", "O_FIPS_Y", "O_STATE", 
+    "D_FIPS", "O_FIPS", "O_ST_FIPS", "D_ST_FIPS", "move" )]
     
-  data.cvi <-data.cvi[!is.na(data.cvi$O_FIPS),]
-  data.cvi <-data.cvi[!is.na(data.cvi$D_FIPS),]
+data.cvi <-data.cvi[!is.na(data.cvi$O_FIPS),]
+data.cvi <-data.cvi[!is.na(data.cvi$D_FIPS),]
  
- # Subset cvi data by year.
- data10<-data.cvi[data.cvi$SAMPLE_YEAR2=="2010",]
- data11<-data.cvi[data.cvi$SAMPLE_YEAR2=="2011",]
-  data.cvi$MOVE<-1
-  data10$MOVE<-1
-  data11$MOVE<-1
+# Subset cvi data by year.
+data10<-data.cvi[data.cvi$SAMPLE_YEAR2=="2010",]
+data11<-data.cvi[data.cvi$SAMPLE_YEAR2=="2011",]
+data.cvi$MOVE<-1; data10$MOVE<-1; data11$MOVE<-1
 
 # make data.cvi without Nebraska
 data2011red<-data11[data11$O_STATE!="NE",]
@@ -54,24 +52,24 @@ alldata<-data$NUM_SWINE
 
 # this function makes the histogram, and saves it to your working directory
 my.histogram.maker<-function(data, filename){
-  swine.hist =  hist(data, plot=FALSE) 
-  tiff(paste(filename, ".tiff", sep=""), width=9, height=7, units="in", res=600)
-  par(mar=c(6,6,4,2))
-  max.x = max(swine.hist$breaks)
-  max.y = max(swine.hist$counts)
-  barplot(swine.hist$counts, width=1, space=0, main=NULL, xlab="", ylim=c(0,max.y+10), ylab="", cex.lab=1.5, cex.axis=1.4, bty="n", col="darkseagreen", las=1)  # cex was 1.4 with default settings
-  mtext("Number of shipments", side=2, line=4.4, cex=1.6) 
-  mtext("Number of swine", side=1, line=3, cex=1.6) 
-  axis(side=1, at=seq(1, (length(swine.hist$breaks)-1)), labels=swine.hist$breaks[-1], cex=1.5)
+    swine.hist =  hist(data, plot=FALSE) 
+    tiff(paste(filename, ".tiff", sep=""), width=9, height=7, units="in", res=600)
+    par(mar=c(6,6,4,2))
+    max.x = max(swine.hist$breaks)
+    max.y = max(swine.hist$counts)
+    barplot(swine.hist$counts, width=1, space=0, main=NULL, xlab="", ylim=c(0,max.y+10), ylab="", cex.lab=1.5, cex.axis=1.4, bty="n", col="darkseagreen", las=1)  # cex was 1.4 with default settings
+    mtext("Number of shipments", side=2, line=4.4, cex=1.6) 
+    mtext("Number of swine", side=1, line=3, cex=1.6) 
+    axis(side=1, at=seq(1, (length(swine.hist$breaks)-1)), labels=swine.hist$breaks[-1], cex=1.5)
   
-  # this part of the function plots the inset figure: 
-  swine.hist100= hist(data[data<100], breaks=seq(0,100, 10), plot=FALSE)
-  par(fig= c(0.45, 0.95, 0.45, 0.95), new=T, mar=c(3,2,1.5, 1), lwd=1, mgp=c(1, 0.25, 0))
-  max.x100 = max(swine.hist100$breaks)
-  max.y100 = max(swine.hist100$counts)
-  barplot(swine.hist100$counts, width=1, space=0, main=NULL, xlab="", ylim=c(0, max.y100+10), cex.lab=1.3, cex.axis=1.2, bty="n", col="darkslateblue", las=1, tcl=-0.2)
-  axis(side=1, at=seq(1, (length(swine.hist100$breaks)-1)), labels=swine.hist100$breaks[-1], cex.lab= 1.2, tcl=-0.2)
-  dev.off()
+    # this part of the function plots the inset figure: 
+    swine.hist100= hist(data[data<100], breaks=seq(0,100, 10), plot=FALSE)
+    par(fig= c(0.45, 0.95, 0.45, 0.95), new=T, mar=c(3,2,1.5, 1), lwd=1, mgp=c(1, 0.25, 0))
+    max.x100 = max(swine.hist100$breaks)
+    max.y100 = max(swine.hist100$counts)
+    barplot(swine.hist100$counts, width=1, space=0, main=NULL, xlab="", ylim=c(0, max.y100+10), cex.lab=1.3, cex.axis=1.2, bty="n", col="darkslateblue", las=1, tcl=-0.2)
+    axis(side=1, at=seq(1, (length(swine.hist100$breaks)-1)), labels=swine.hist100$breaks[-1], cex.lab= 1.2, tcl=-0.2)
+    dev.off()
 }
 
 my.histogram.maker(alldata, "Figure1")
