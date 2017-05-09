@@ -1,6 +1,5 @@
 #################################################
 #################################################
-#################################################
 # Goal of this code is to Generate network statistics
 # for swine movement networks
 # We generate networks based on 3 datasets 
@@ -34,15 +33,17 @@ library(plyr)      #  plyr helps manipulate dataframes
 #################################################
 # Step 2:  Read in the data and remove/change any wierd things
 #################################################
-dat=read.csv("Swine_cvi_final.csv")
-dat= dat[!is.na(dat$NUM_SWINE),]  #-1
-dat=dat[dat$NUM_SWINE>0,] # -13
-dat=dat[!is.na(dat$SAMPLE_YEAR2),]  #-38 #Clay added new col for year#
-dat=dat[dat$NUM_SWINE>0,]
+
+dat = read.csv("Swine_cvi_final.csv")
+dat = dat[!is.na(dat$NUM_SWINE),]  #-1
+dat = dat[dat$NUM_SWINE>0,] # -13
+dat = dat[!is.na(dat$SAMPLE_YEAR2),]  #-38 #Clay added new col for year
+dat = dat[dat$NUM_SWINE>0,]
 summary(dat)
 
-# make a new column of all ones that represents the number of shipments
+# make a new column of 1s that represents the number of shipments
 dat$MOVE <-1
+
 dat<-dat[, c("STATE", "SAMPLE_YEAR2", "PURPOSE", 
 	"NUM_SWINE", "NUM_BOAR", "NUM_BARROW", "NUM_GILT", 
 	"NUM_SOW", "NUM_AGE_0.2_MONTHS", 
@@ -69,6 +70,7 @@ datared2011= data2011[data2011$STATE!="NE",]
 #################################################
 # Step 3:  Make Networks, function to apply to each subset of the data 
 #################################################
+<<<<<<< HEAD
 
  makenetworks<-function(datared, filename){
 	#############################################
@@ -316,11 +318,4 @@ make_state_networks(datasubred2011, filename="sub2011noNE")
 #datastates<-c(19, 6, 27, 31, 36, 37, 48, 55)  # Iowa=19, TX=48, CA=6, MN=27, NE=31, NY=36, NC=37, WI=55
 #datastatenoNE<-c(19, 6, 27, 36, 37, 48, 55)
 #summary(node2010[node2010$StateID %in% datastates])
-
-
-
-
-
-
-
 
