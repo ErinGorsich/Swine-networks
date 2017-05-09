@@ -9,6 +9,8 @@ library(plyr)
 library(RColorBrewer)
 library(plotrix)
 library(SDMTools)
+library(shape)
+library(sp)
 
 # NOTE TO SELF- WHEN REMAKE FINAL FIGURES, REMEMBER TO REMOVE WITHIN STATE SHIPMENTS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -364,11 +366,15 @@ for (i in 1:length(edge2010[,1])){
 	temp[i]<-sum(which(paste(edge2010$node2[i], edge2010$node1[i], sep='.u.')== as.character(edge2010$edge)))
 	ifelse(temp[i]==0, edge2010$unique[i]<-TRUE, edge2010$unique[i]<-FALSE)
 }
+data2010$NUM_SWINE<-as.numeric(data2010$NUM_SWINE)
 
+# SUM the total number of shipmetns between states; sums, both directions, change this to make for just out or in degree. 
+# NOTE: still have OSTATE.u.DSTATE and DSTATE.u.OSTATE when they are not unique, but they have the same values of N.
 for (i in 1: length(data2010[,1])){
 	for (j in 1:length(edge2010[,1])){
 		if (
-		paste(as.character(data2010$O_ST_FIPS[i]),as.character(data2010$D_ST_FIPS[i]),sep='.u.')==
+		paste(as.character(data2010$O_ST_FIPS[i]), 
+		as.character(data2010$D_ST_FIPS[i]),sep='.u.')==
 		as.character(edge2010$edge[j]) || paste(as.character(data2010$D_ST_FIPS[i]), 
 		as.character(data2010$O_ST_FIPS[i]),sep='.u.')== as.character(edge2010$edge[j]))
 		edge2010$N[j]<- edge2010$N[j]+1
@@ -376,15 +382,50 @@ for (i in 1: length(data2010[,1])){
 	}
 }	
 
+
 data(state.fips)
 # add latitude and longitude and plot
 matchdata<-read.csv("county_centroid_coordinates.csv")
-statecoords<-read.csv("state_latlon.csv")
+matchdata<-matchdata[!is.na(matchdata$FIPS),]
+matchdata$state2<-tolower(matchdata$state)
+#statecoords<-read.csv("state_latlon.csv") # funky coordinates, old
+statecoords<-read.table("~/Documents/post-doc/2010 Cattle Movement Practice/state_centroid_coordinates.txt", header=TRUE, sep=",")  # same projection
+# instead use values in the maps package
 
-edge2010$Olatitude<- matchdata$latitude[match(edge2010$node1, matchdata$ST_FIPS)]
-edge2010$Dlatitude<- matchdata$latitude[match(edge2010$node2, matchdata$ST_FIPS)]
-edge2010$Olongitude<- matchdata$longitude[match(edge2010$node1, matchdata$ST_FIPS)]
-edge2010$Dlongitude<- matchdata$longitude[match(edge2010$node2, matchdata$ST_FIPS)]
+library(ggplot2)
+getLabelPoint<-
+	function(state){Polygon(state[c('long', 'lat')])@labpt}
+df<-map_data('state')
+centroids<-by(df, df$region, getLabelPoint)             # returns list of labelpoints
+centroids<-do.call("rbind.data.frame", centroids)  # convert to a Data frame
+names(centroids) <-c('long', 'lat')	
+centroids$names<-rownames(centroids)
+
+# check: states washington, virginia, north carolina, new york, michigan are funky. 
+#map('state')
+#text(centroids$long, centroids$lat, rownames(centroids), offset=0, cex=0.4)
+centroids$lat[centroids$names=="washington"]<-statecoords$latitude[statecoords$state=="Washington"]
+#centroids$long[centroids$names=="washington"]<-statecoords$longitude[statecoords$state=="Washington"]	
+centroids$lat[centroids$names=="virginia"]<-statecoords$latitude[statecoords$state=="Virginia"]
+centroids$long[centroids$names=="virginia"]<-statecoords$longitude[statecoords$state=="Virginia"]	
+centroids$lat[centroids$names=="north carolina"]<-statecoords$latitude[statecoords$state=="North Carolina"]
+centroids$long[centroids$names=="north carolina"]<-statecoords$longitude[statecoords$state=="North Carolina"]	
+centroids$lat[centroids$names=="new york"]<-statecoords$latitude[statecoords$state=="New York"]
+centroids$long[centroids$names=="new york"]<-statecoords$longitude[statecoords$state=="New York"]	
+centroids$lat[centroids$names=="michigan"]<-statecoords$latitude[statecoords$state=="Michigan"]
+centroids$long[centroids$names=="michigan"]<-statecoords$longitude[statecoords$state=="Michigan"]	
+centroids$lat[centroids$names=="new york"]<-42.8
+centroids$lat[centroids$names=="massachusetts"]<-42.45
+map('state')
+text(centroids$long, centroids$lat, rownames(centroids), offset=0, cex=0.4)
+
+matchdata$Rlatitude<-centroids$lat[match(matchdata$state2, rownames(centroids))]
+matchdata$Rlongitude<-centroids$long[match(matchdata$state2, rownames(centroids))]
+
+edge2010$Olatitude<- matchdata$Rlatitude[match(edge2010$node1, matchdata$ST_FIPS)]
+edge2010$Dlatitude<- matchdata$Rlatitude[match(edge2010$node2, matchdata$ST_FIPS)]
+edge2010$Olongitude<- matchdata$Rlongitude[match(edge2010$node1, matchdata$ST_FIPS)]
+edge2010$Dlongitude<- matchdata$Rlongitude[match(edge2010$node2, matchdata$ST_FIPS)]
 edge2010<-edge2010[-113,]   # remove row 113, with a shipment from Cali to Hawaii...
 
 
@@ -453,6 +494,24 @@ lines(x=c(edge2010$Olongitude[i], edge2010$Dlongitude[i]),
 dev.off()
 
 
+############################
+# BETTER: FOR KATIE
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/flowmapall_st_lines_2010.tiff",
+ width = 140, height = 90, units = "mm", res=600, compression="lzw")
+ par(mai=c(1,1,1,1))
+ map('state', resolution=0, fill=TRUE, col="white", boundary="dark gray", lwd=0.5)
+ map('state', region=c("Iowa", "Texas", "California", 
+     "Minnesota", "New York", "North Carolina", "Wisconsin"),
+     resolution=0, col="black", add=TRUE, lwd=1.5)
+ N<-(log(edge2010$N+1, base=5)-0.6)*1.8
+ for (i in 1:length(edge2010[,1])){	
+ lines(x=c(edge2010$Olongitude[i], edge2010$Dlongitude[i]),
+       y=c(edge2010$Olatitude[i], edge2010$Dlatitude[i]), lwd=N[i], col="gray44")
+ }
+ dev.off()
+
+
+
 #################
 # 2011
 #################
@@ -494,15 +553,13 @@ for (i in 1: length(data2011[,1])){
 	}
 }	
 
-data(state.fips)
-# add latitude and longitude and plot
-matchdata<-read.csv("county_centroid_coordinates.csv")
-statecoords<-read.csv("state_latlon.csv")
+# add in centroid data for flows from centroids and matchdata compiled for 2010 above
+edge2011$Olatitude<-NA; edge2011$Dlatitude<-NA
+edge2011$Olatitude<- matchdata$Rlatitude[match(edge2011$node1, matchdata$ST_FIPS)]
+edge2011$Dlatitude<- matchdata$Rlatitude[match(edge2011$node2, matchdata$ST_FIPS)]
+edge2011$Olongitude<- matchdata$Rlongitude[match(edge2011$node1, matchdata$ST_FIPS)]
+edge2011$Dlongitude<- matchdata$Rlongitude[match(edge2011$node2, matchdata$ST_FIPS)]
 
-edge2011$Olatitude<- matchdata$latitude[match(edge2011$node1, matchdata$ST_FIPS)]
-edge2011$Dlatitude<- matchdata$latitude[match(edge2011$node2, matchdata$ST_FIPS)]
-edge2011$Olongitude<- matchdata$longitude[match(edge2011$node1, matchdata$ST_FIPS)]
-edge2011$Dlongitude<- matchdata$longitude[match(edge2011$node2, matchdata$ST_FIPS)]
 # check for strange origin locations?
 #edge2011<-edge2011[-21,]   # remove row 113, with a shipment from Cali to Hawaii (FIPS=15)...
 edge2011<-edge2011[edge2011$node2!=15,]
@@ -516,6 +573,12 @@ edge2011<-edge2011[edge2011$node2!=2,]
 #node.stats$STATE_NAME_R<-state.fips$polyname[match(node.stats$NodeID, state.fips$fips)]
 #node.stats2011$STATE_NAME_R<-state.fips$polyname[match(node.stats2011$NodeID, state.fips$fips)]
 #node.stats2011none$STATE_NAME_R<-state.fips$polyname[match(node.stats2011none$NodeID, state.fips$fips)]
+
+###########################
+###########################
+# skip this part
+###########################
+###########################
 
 ctname<-map('state', resolution=0, plot=FALSE)$names
 ctname<-as.matrix(ctname)
@@ -555,9 +618,6 @@ name$color2011[53:55]<-cols[4]		#VA
 name$color2011[6]<-cols[4]		#CT
 
 
-
-
-
 # 2011 map, with lines and state-level GWCC
 tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/GSCC&GWCC_st_lines_2011.tiff",
 width = 140, height = 90, units = "mm", res=600, compression="lzw")
@@ -569,16 +629,35 @@ map('state', region=c("Iowa", "Texas", "California",
 N<-(log(edge2011$N+1)-0.5)*1.6
 for (i in 1:150){	
 lines(x=c(edge2011$Olongitude[i], edge2011$Dlongitude[i]),
-      y=c(edge2011$Olatitude[i], edge2011$Dlatitude[i]), lwd=edge2011$N[i], col=rgb(100, 100, 100, alpha=round(log((edge2011$N[i]+1), base=1.8)*5+192), max=255))
+      y=c(edge2011$Olatitude[i], edge2011$Dlatitude[i]), lwd=N[i], 
+      col=rgb(100, 100, 100, max=255, alpha=round(log((edge2011$N[i]+1), base=1.8)*4+220)))
 }
 #alpha=log((edge2010$N[i]+1), base=1.8)*5+192
+#alpha=round(log((edge2011$N[i]+1), base=1.8)*4+192)
 dev.off()
 
+##############################
+# Map for Katie
+##############################
+############################
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/flowmapall_st_lines_2011.tiff",
+ width = 140, height = 90, units = "mm", res=600, compression="lzw")
+ par(mai=c(1,1,1,1))
+ map('state', resolution=0, fill=TRUE, col="white", boundary="dark gray", lwd=0.5)
+ map('state', region=c("Iowa", "Texas", "California", 
+     "Minnesota", "New York", "North Carolina", "Wisconsin", "Nebraska"),
+     resolution=0, col="black", add=TRUE, lwd=1.5)
+ N<-(log(edge2011$N+1, base=5)-0.4)*1.8
+ for (i in 1:length(edge2011[,1])){	
+ lines(x=c(edge2011$Olongitude[i], edge2011$Dlongitude[i]),
+       y=c(edge2011$Olatitude[i], edge2011$Dlatitude[i]), lwd=N[i], col="gray44")
+ }
+ dev.off()
 
 
 
-
-
+temp<-data2011[data2011$O_STATE_NAME_FIPS=="California",]
+table(temp$D_STATE_NAME_FIPS)
 
 
 
@@ -678,13 +757,11 @@ map('state', add=TRUE, resolution=0, lwd=0.5)
 map('state', region=c("Iowa", "Texas", "California", 
     "Minnesota", "New York", "North Carolina", "Wisconsin"),
     resolution=0, col="dark blue", add=TRUE, lwd=1)
-leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5", "5-6")
-leg.col<-cols[1:6]
+#leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5", "5-6")
+#leg.col<-cols[1:6]
 #color.legend(1, 6, 12, 9, leg.txt, rect.col=leg.col)  # didn't work
-
-pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
-
-legend.gradient(pnts, cols = leg.col, limits=c("1", "175"), title="", cex=0.5)
+#pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
+#legend.gradient(pnts, cols = leg.col, limits=c("1", "175"), title="", cex=0.5)
 dev.off()
 
 ################################
@@ -710,20 +787,19 @@ for (i in 1:length(name$InDegreeShip)){
 }
 name$colID<-as.character(colmatch$col[match(name$IDbin, colmatch$num)])
 
-tiff('paperdrafts_swine/Figure5a_swine_id_countylevel_2010.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/Figure5a_swine_id_countylevel_2010_nolegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$colID, boundary="light gray", lwd=0.3, add=TRUE)
 map('state', add=TRUE, resolution=0, lwd=0.5)
 map('state', region=c("Iowa", "Texas", "California", 
     "Minnesota", "New York", "North Carolina", "Wisconsin"),
-    resolution=0, col="dark red", add=TRUE, lwd=1)
-leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5")
-leg.col<-cols[2:6]
+    resolution=0, col="dark blue", add=TRUE, lwd=1)
+#leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5")
+#leg.col<-cols[2:6]
 #color.legend(1, 6, 12, 9, leg.txt, rect.col=leg.col)  # didn't work
-
-pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
-legend.gradient(pnts, cols = leg.col, limits=c("1", "102"), title="", cex=0.5)
+#pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
+#legend.gradient(pnts, cols = leg.col, limits=c("1", "102"), title="", cex=0.5)
 dev.off()
 
 
@@ -753,20 +829,19 @@ for (i in 1:length(name$Betweenness)){
 
 name$colB<-as.character(colmatch$col[match(name$Bbin, colmatch$num)])
 
-tiff('paperdrafts_swine/Figure5e_swine_btwn_countylevel_2010.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/Figure5e_swine_btwn_countylevel_2010_nolegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$colB, boundary="light gray", lwd=0.3, add=TRUE)
 map('state', add=TRUE, resolution=0, lwd=0.5)
 map('state', region=c("Iowa", "Texas", "California", 
     "Minnesota", "New York", "North Carolina", "Wisconsin"),
-    resolution=0, col="dark green", add=TRUE, lwd=1)
-leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5")
-leg.col<-cols[3:9]
+    resolution=0, col="dark blue", add=TRUE, lwd=1)
+#leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5")
+#leg.col<-cols[3:9]
 #color.legend(1, 6, 12, 9, leg.txt, rect.col=leg.col)  # didn't work
-
-pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
-legend.gradient(pnts, cols = leg.col, limits=c("1", "13922"), title="", cex=0.5)
+#pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
+#legend.gradient(pnts, cols = leg.col, limits=c("1", "13922"), title="", cex=0.5)
 dev.off()
 
 
@@ -842,7 +917,7 @@ for (i in 1:length(name$OutDegreeShip)){
 }
 name$col<-as.character(colmatch$col[match(name$ODbin, colmatch$num)])
 
-tiff('paperdrafts_swine/Figure5d_swine_od_countylevel_2011.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/Figure5d_swine_od_countylevel_2011_updatelegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$col, boundary="light gray", lwd=0.3, add=TRUE)
@@ -850,10 +925,14 @@ map('state', add=TRUE, resolution=0, lwd=0.5)
 map('state', region=c("Iowa", "Texas", "California", 
     "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin"),
     resolution=0, col="dark blue", add=TRUE, lwd=1)
-leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5", "5-6")
-leg.col<-cols[1:6]
-pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
-legend.gradient(pnts, cols = leg.col, limits=c("1", "175"), title="", cex=0.5)
+
+# state level map legends use:
+colorlegend(col=cols, zval=c(0, 2.8, 7.4, 20.1, 54.6, 148.4, 403.4), zlim=c(1, 403), log=TRUE, posx=c(0.8, 0.83), posy=c(0.22, 0.6), digit=0, cex=0.2)
+# initial county-level map legends (changed for consistency)
+#leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5", "5-6")
+#leg.col<-cols[1:6]
+#pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
+#legend.gradient(pnts, cols = leg.col, limits=c("1", "175"), title="", cex=0.5)
 dev.off()
 
 ################################
@@ -880,20 +959,21 @@ for (i in 1:length(name$InDegreeShip)){
 }
 name$colID<-as.character(colmatch$col[match(name$IDbin, colmatch$num)])
 
-tiff('paperdrafts_swine/Figure5b_swine_id_countylevel_2011.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/Figure5b_swine_id_countylevel_2011_updatelegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$colID, boundary="light gray", lwd=0.3, add=TRUE)
 map('state', add=TRUE, resolution=0, lwd=0.5)
 map('state', region=c("Iowa", "Texas", "California", 
     "Minnesota", "New York", "North Carolina", "Wisconsin", "Nebraska"),
-    resolution=0, col="dark red", add=TRUE, lwd=1)
-leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5")
-leg.col<-cols[2:6]
-#color.legend(1, 6, 12, 9, leg.txt, rect.col=leg.col)  # didn't work
+    resolution=0, col="dark blue", add=TRUE, lwd=1)
+# state level map legends use:
+colorlegend(col=cols[2:6], zval=c(0, 2.8, 7.4, 20.1, 54.6, 148.4), zlim=c(1, 148), log=TRUE, posx=c(0.8, 0.83), posy=c(0.22, 0.6), digit=0, cex=0.2)
 
-pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
-legend.gradient(pnts, cols = leg.col, limits=c("1", "133"), title="", cex=0.5)
+#leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5")
+#leg.col<-cols[2:6]
+#pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
+#legend.gradient(pnts, cols = leg.col, limits=c("1", "133"), title="", cex=0.5)
 dev.off()
 
 ################################
@@ -924,20 +1004,22 @@ name$Bbin[756]<-1
 name$Bbin[1323]<-1
 name$colB<-as.character(colmatch$col[match(name$Bbin, colmatch$num)])
 
-tiff('paperdrafts_swine/Figure5f_swine_btwn_countylevel_2011.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/Figure5f_swine_btwn_countylevel_2011_updatelegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$colB, boundary="light gray", lwd=0.3, add=TRUE)
 map('state', add=TRUE, resolution=0, lwd=0.5)
 map('state', region=c("Iowa", "Texas", "California", 
     "Minnesota", "New York", "North Carolina", "Wisconsin", "Nebraska"),
-    resolution=0, col="dark green", add=TRUE, lwd=1)
-leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5")
-leg.col<-cols[3:9]
-#color.legend(1, 6, 12, 9, leg.txt, rect.col=leg.col)  # didn't work
+    resolution=0, col="dark blue", add=TRUE, lwd=1)
+# state level map legends use:
+colorlegend(col=cols[3:9], zval=c(0, 4.48, 20.09, 90.02, 403.43, 1808, 8103), zlim=c(1, 8103), log=TRUE, posx=c(0.8, 0.83), posy=c(0.22, 0.6), digit=0, cex=0.2)
 
-pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
-legend.gradient(pnts, cols = leg.col, limits=c("1", "13123"), title="", cex=0.5)
+# county legend
+#leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5")
+#leg.col<-cols[3:9]
+#pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
+#legend.gradient(pnts, cols = leg.col, limits=c("1", "13123"), title="", cex=0.5)
 dev.off()
 
 
@@ -946,6 +1028,272 @@ dev.off()
 # Figure 6: MAPS OF IN-DEGREE AND OUT DEGREE AT STATE LEVEL
 #############################################
 ###############################################
-#update from summarystats_fig1&2&3
+net.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2011all.csv")
+node.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011all.csv")
+net.stats_st_2010<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2010.csv")
+node.stats_st_2010<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2010.csv")
+data(state.fips)
+
+# Map of out degree= blue; In degree by state= red; betweeness= green. 
+
+# Out degree= 
+ctname<-map('state', resolution=0, plot=FALSE)$names
+ctname<-as.matrix(ctname)
+data(state.fips)
+node.stats_st_2010$COUNTY_NAME_R<-state.fips$polyname[match(node.stats_st_2010$NodeID, state.fips$fips)]
+node.stats_st_2011$COUNTY_NAME_R<-state.fips$polyname[match(node.stats_st_2011$NodeID, state.fips$fips)]
+
+name<-data.frame(ctname=ctname, OutDegreeShip2010=NA, OutDegreeSwine2010=NA, OutDegreeShip2011=NA, OutDegreeSwine2011=NA, InDegreeShip2010=NA, InDegreeSwine2010=NA, InDegreeShip2011=NA, InDegreeSwine2011=NA, Betweenness2010=NA, Betweenness2011=NA)
+# fill outdegree columns
+name$OutDegreeShip2010<-node.stats_st_2010$OutDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]
+name$OutDegreeSwine2010<-node.stats_st_2010$OutDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]
+name$OutDegreeShip2010[is.na(name$OutDegreeShip2010)]<-0
+name$OutDegreeSwine2010[is.na(name$OutDegreeSwine2010)]<-0
+name$OutDegreeShip2011<-node.stats_st_2011$OutDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]
+name$OutDegreeSwine2011<-node.stats_st_2011$OutDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]
+name$OutDegreeShip2011[is.na(name$OutDegreeShip2011)]<-0
+name$OutDegreeSwine2011[is.na(name$OutDegreeSwine2011)]<-0
+# fill indegree columns
+name$InDegreeShip2010<-node.stats_st_2010$InDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]
+name$InDegreeSwine2010<-node.stats_st_2010$InDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]
+name$InDegreeShip2010[is.na(name$InDegreeShip2010)]<-0
+name$InDegreeSwine2010[is.na(name$InDegreeSwine2010)]<-0
+name$InDegreeShip2011<-node.stats_st_2011$InDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]
+name$InDegreeSwine2011<-node.stats_st_2011$InDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]
+name$InDegreeShip2011[is.na(name$InDegreeShip2011)]<-0
+name$InDegreeSwine2011[is.na(name$InDegreeSwine2011)]<-0
+# Betweenness
+name$Betweenness2010<-node.stats_st_2010$Betweenness[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]
+name$Betweenness2011<-node.stats_st_2011$Betweenness[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]
+
+# try two color schemes... since shipments range from 0 to 172.  
+
+############################
+# Make Out Degree Color Schemes & Plot 2010 & 2011
+# 1) range of one color
+cols <- colorRampPalette(brewer.pal(9, "PuBu"))(7)   # colors for level plots
+colmatch<-data.frame(num=seq(0,7,1), col=c("white", cols))
+name$OutDegreeShip2010[43]<-0
+name$OutDegreeShip2010[29]<-0
+
+#log scale color
+#name$ODbin2010<-NA; name$ODbin2011<-NA; name$col2010<-NA; name$col2011<-NA
+#for (i in 1:length(name$OutDegreeShip2010)){
+#	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}
+#	else if (log(name$OutDegreeShip2010[i])>=0 & log(name$OutDegreeShip2010[i])<=1) {name$ODbin2010[i]<-1}
+#	else if (log(name$OutDegreeShip2010[i])>1 & log(name$OutDegreeShip2010[i])<=2) {name$ODbin2010[i]<-2}
+#	else if (log(name$OutDegreeShip2010[i])>2 & log(name$OutDegreeShip2010[i])<=3) {name$ODbin2010[i]<-3}
+#	else if (log(name$OutDegreeShip2010[i])>3 & log(name$OutDegreeShip2010[i])<=4) {name$ODbin2010[i]<-4}
+#	else if (log(name$OutDegreeShip2010[i])>4 & log(name$OutDegreeShip2010[i])<=5) {name$ODbin2010[i]<-5}
+#	else if (log(name$OutDegreeShip2010[i])>5 & log(name$OutDegreeShip2010[i])<=6) {name$ODbin2010[i]<-6}
+#	else if (log(name$OutDegreeShip2010[i])>6 & log(name$OutDegreeShip2010[i])<=7) {name$ODbin2010[i]<-7}
+#}
+
+name$ODbin2010<-NA; name$ODbin2011<-NA; name$col2010<-NA; name$col2011<-NA
+for (i in 1:length(name$OutDegreeShip2010)){
+	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}
+	else if ((name$OutDegreeShip2010[i])>=4 &(name$OutDegreeShip2010[i])<=200) {name$ODbin2010[i]<-2}
+	else if ((name$OutDegreeShip2010[i])>200 &(name$OutDegreeShip2010[i])<=400) {name$ODbin2010[i]<-3}
+	else if ((name$OutDegreeShip2010[i])>400 &(name$OutDegreeShip2010[i])<=600) {name$ODbin2010[i]<-4}
+	else if ((name$OutDegreeShip2010[i])>600 &(name$OutDegreeShip2010[i])<=800) {name$ODbin2010[i]<-5}
+	else if ((name$OutDegreeShip2010[i])>800 &(name$OutDegreeShip2010[i])<=1000) {name$ODbin2010[i]<-6}
+	else if ((name$OutDegreeShip2010[i])>1000 &(name$OutDegreeShip2010[i])<=1200) {name$ODbin2010[i]<-7}
+}
+
+name$col2010<-as.character(colmatch$col[match(name$ODbin2010, colmatch$num)])
+name$col2010[is.na(name$col2010)]<-"#FFFFFF"
+
+name$col2010[39]<-name$col2010[38]  # fill in main NC with rest of NC
+name$col2010[40]<-name$col2010[38]  # fill in main NC with rest of NC
+
+name$col2010[35]<-name$col2010[34]  # fill in main NY with rest of NY
+name$col2010[36]<-name$col2010[34]
+name$col2010[37]<-name$col2010[34]
+
+name$col2010[24]<-name$col2010[23]  # fill in main MI with rest of MI
+name$col2010[21]<-name$col2010[20]  # mass
+name$col2010[22]<-name$col2010[20] 
+
+name$col2010[54]<-name$col2010[53]  # fill in main VA
+name$col2010[55]<-name$col2010[53]  
 
 
+name$col2010[57]<-name$col2010[56]  # fill in main Washington
+name$col2010[58]<-name$col2010[56] 
+name$col2010[59]<-name$col2010[56] 
+name$col2010[60]<-name$col2010[56] 
+
+
+#for (i in 1:length(name$OutDegreeShip2011)){
+#	if (name$OutDegreeShip2011[i]==0) {name$ODbin2011[i]<-0}
+#	else if (log(name$OutDegreeShip2011[i])>=0 & log(name$OutDegreeShip2011[i])<=1) {name$ODbin2011[i]<-1}
+#	else if (log(name$OutDegreeShip2011[i])>1 & log(name$OutDegreeShip2011[i])<=2) {name$ODbin2011[i]<-2}
+#	else if (log(name$OutDegreeShip2011[i])>2 & log(name$OutDegreeShip2011[i])<=3) {name$ODbin2011[i]<-3}
+#	else if (log(name$OutDegreeShip2011[i])>3 & log(name$OutDegreeShip2011[i])<=4) {name$ODbin2011[i]<-4}
+#	else if (log(name$OutDegreeShip2011[i])>4 & log(name$OutDegreeShip2011[i])<=5) {name$ODbin2011[i]<-5}
+#	else if (log(name$OutDegreeShip2011[i])>5 & log(name$OutDegreeShip2011[i])<=6) {name$ODbin2011[i]<-6}
+#	else if (log(name$OutDegreeShip2011[i])>6 & log(name$OutDegreeShip2011[i])<=7) {name$ODbin2011[i]<-7}
+#}
+
+for (i in 1:length(name$OutDegreeShip2011)){
+	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}
+	else if ((name$OutDegreeShip2011[i])>=4 &(name$OutDegreeShip2011[i])<=200) {name$ODbin2011[i]<-2}
+	else if ((name$OutDegreeShip2011[i])>200 &(name$OutDegreeShip2011[i])<=400) {name$ODbin2011[i]<-3}
+	else if ((name$OutDegreeShip2011[i])>400 &(name$OutDegreeShip2011[i])<=600) {name$ODbin2011[i]<-4}
+	else if ((name$OutDegreeShip2011[i])>600 &(name$OutDegreeShip2011[i])<=800) {name$ODbin2011[i]<-5}
+	else if ((name$OutDegreeShip2011[i])>800 &(name$OutDegreeShip2011[i])<=1000) {name$ODbin2011[i]<-6}
+	else if ((name$OutDegreeShip2011[i])>1000 &(name$OutDegreeShip2011[i])<=1200) {name$ODbin2011[i]<-7}
+}
+name$ODbin2011[name$ctname=="nebraska"]<-6
+
+name$col2011<-as.character(colmatch$col[match(name$ODbin2011, colmatch$num)])
+name$col2011[is.na(name$col2011)]<-"#FFFFFF"
+
+name$col2011[39]<-name$col2011[38]  # fill in main NC with rest of NC
+name$col2011[40]<-name$col2011[38]  # fill in main NC with rest of NC
+
+name$col2011[35]<-name$col2011[34]  # fill in main NY with rest of NY
+name$col2011[36]<-name$col2011[34]
+name$col2011[37]<-name$col2011[34]
+
+# 2010
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/OD2010.tiff",
+width = 140, height = 90, units = "mm", res=600, compression="lzw")
+par(mai=c(1,1,1,1))
+map('state', resolution=0, lwd=0.5, col="dark gray")
+map('state', resolution=0, fill=TRUE, col=name$col2010, boundary="light gray", lwd=0.5, add=TRUE)
+map('state', resolution=0, add=TRUE)
+map('state', region=c("Iowa", "Texas", "California", 
+    "Minnesota", "New York", "North Carolina", "Wisconsin"),
+    resolution=0, col="dark blue", add=TRUE, lwd=2)
+#color.legend(1, 6, 12, 9, leg.txt, rect.col=leg.col)  # didn't work
+dev.off()
+
+# 2011
+col2=cols[c(1,3:7)]
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/OD2011.tiff",
+width = 140, height = 90, units = "mm", res=600, compression="lzw")
+par(mai=c(1,1,1,1))
+map('state', resolution=0, lwd=0.5, col="dark gray")
+map('state', resolution=0, fill=TRUE, col=name$col2011, boundary="light gray", lwd=0.5, add=TRUE)
+map('state', resolution=0, add=TRUE)
+map('state', region=c("Iowa", "Texas", "California", 
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),
+    resolution=0, col="dark blue", add=TRUE, lwd=2)
+colorlegend(col=col2, zval=c(0, 200, 400, 600, 800, 1000, 1200), zlim=c(1, 1200), log=FALSE, posx=c(0.8, 0.83), posy=c(0.22, 0.6), digit=0, cex=0.2)
+dev.off()
+
+############################
+# Make In Degree Color Schemes & Plot 2010 & 2011
+
+# 1) range of one color
+cols <- colorRampPalette(brewer.pal(9, "YlOrRd"))(7)   # colors for level plots
+colmatch<-data.frame(num=seq(0,7,1), col=c("white", cols))
+
+name$IDbin2010<-NA; name$IDbin2011<-NA; name$idcol2010<-NA; name$idcol2011<-NA
+for (i in 1:length(name$OutDegreeShip2010)){
+	if (name$InDegreeShip2010[i]==0) {name$IDbin2010[i]<-0}
+	else if (log(name$InDegreeShip2010[i])>=0 & log(name$InDegreeShip2010[i])<=1) {name$IDbin2010[i]<-1}
+	else if (log(name$InDegreeShip2010[i])>1 & log(name$InDegreeShip2010[i])<=2) {name$IDbin2010[i]<-2}
+	else if (log(name$InDegreeShip2010[i])>2 & log(name$InDegreeShip2010[i])<=3) {name$IDbin2010[i]<-3}
+	else if (log(name$InDegreeShip2010[i])>3 & log(name$InDegreeShip2010[i])<=4) {name$IDbin2010[i]<-4}
+	else if (log(name$InDegreeShip2010[i])>4 & log(name$InDegreeShip2010[i])<=5) {name$IDbin2010[i]<-5}
+	else if (log(name$InDegreeShip2010[i])>5 & log(name$InDegreeShip2010[i])<=6) {name$IDbin2010[i]<-6}
+	else if (log(name$InDegreeShip2010[i])>6 & log(name$InDegreeShip2010[i])<=7.5) {name$IDbin2010[i]<-7}
+}
+name$idcol2010<-as.character(colmatch$col[match(name$IDbin2010, colmatch$num)])
+name$idcol2010[is.na(name$idcol2010)]<-"#FFFFFF"
+
+name$idcol2010[39]<-name$idcol2010[38]  # fill in main NC with rest of NC
+name$idcol2010[40]<-name$idcol2010[38]  # fill in main NC with rest of NC
+
+name$idcol2010[35]<-name$idcol2010[34]  # fill in main NY with rest of NY
+name$idcol2010[36]<-name$idcol2010[34]
+name$idcol2010[37]<-name$idcol2010[34]
+
+name$idcol2010[24]<-name$idcol2010[23]  # fill in main MI with rest of MI
+name$idcol2010[21]<-name$idcol2010[20]  # mass
+name$idcol2010[22]<-name$idcol2010[20] 
+
+name$idcol2010[54]<-name$idcol2010[53]  # fill in main VA
+name$idcol2010[55]<-name$idcol2010[53]  
+
+
+name$idcol2010[57]<-name$idcol2010[56]  # fill in main Washington
+name$idcol2010[58]<-name$idcol2010[56] 
+name$idcol2010[59]<-name$idcol2010[56] 
+name$idcol2010[60]<-name$idcol2010[56] 
+
+for (i in 1:length(name$InDegreeShip2011)){
+	if (name$InDegreeShip2011[i]==0) {name$IDbin2011[i]<-0}
+	else if (log(name$InDegreeShip2011[i])>=0 & log(name$InDegreeShip2011[i])<=1) {name$IDbin2011[i]<-1}
+	else if (log(name$InDegreeShip2011[i])>1 & log(name$InDegreeShip2011[i])<=2) {name$IDbin2011[i]<-2}
+	else if (log(name$InDegreeShip2011[i])>2 & log(name$InDegreeShip2011[i])<=3) {name$IDbin2011[i]<-3}
+	else if (log(name$InDegreeShip2011[i])>3 & log(name$InDegreeShip2011[i])<=4) {name$IDbin2011[i]<-4}
+	else if (log(name$InDegreeShip2011[i])>4 & log(name$InDegreeShip2011[i])<=5) {name$IDbin2011[i]<-5}
+	else if (log(name$InDegreeShip2011[i])>5 & log(name$InDegreeShip2011[i])<=6) {name$IDbin2011[i]<-6}
+	else if (log(name$InDegreeShip2011[i])>6 & log(name$InDegreeShip2011[i])<=7.5) {name$IDbin2011[i]<-7}
+
+}
+name$idcol2011<-as.character(colmatch$col[match(name$IDbin2011, colmatch$num)])
+name$idcol2011[is.na(name$idcol2011)]<-"#FFFFFF"
+
+name$idcol2011[39]<-name$idcol2011[38]  # fill in main NC with rest of NC
+name$idcol2011[40]<-name$idcol2011[38]  # fill in main NC with rest of NC
+
+name$idcol2011[35]<-name$idcol2011[34]  # fill in main NY with rest of NY
+name$idcol2011[36]<-name$idcol2011[34]
+name$idcol2011[37]<-name$idcol2011[34]
+
+name$idcol2011[24]<-name$idcol2011[23]  # fill in main MI with rest of MI
+name$idcol2011[21]<-name$idcol2011[20]  # mass
+name$idcol2011[22]<-name$idcol2011[20] 
+
+name$idcol2011[54]<-name$idcol2011[53]  # fill in main VA
+name$idcol2011[55]<-name$idcol2011[53]  
+
+
+name$idcol2011[57]<-name$idcol2011[56]  # fill in main Washington
+name$idcol2011[58]<-name$idcol2011[56] 
+name$idcol2011[59]<-name$idcol2011[56] 
+name$idcol2011[60]<-name$idcol2011[56] 
+
+# 2010
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/ID2010.tiff",
+width = 140, height = 90, units = "mm", res=600, compression="lzw")
+par(mai=c(1,1,1,1))
+map('state', resolution=0, lwd=0.5, col="dark gray")
+map('state', resolution=0, fill=TRUE, col=name$idcol2010, boundary="light gray", lwd=0.5, add=TRUE)
+map('state', resolution=0, add=TRUE)
+map('state', region=c("Iowa", "Texas", "California", 
+    "Minnesota", "New York", "North Carolina", "Wisconsin"),
+    resolution=0, col="dark blue", add=TRUE, lwd=2)
+#colorlegend(col=cols, zval=c(0, 2.8, 7.4, 20.1, 54.6, 148.4, 403.4, 1111), zlim=c(1, 1111), log=TRUE, posx=c(0.86, 0.89), posy=c(0.22, 0.6), digit=0, cex=0.8)
+dev.off()
+
+# 2011
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/ID2011.tiff",
+width = 140, height = 90, units = "mm", res=600, compression="lzw")
+par(mai=c(1,1,1,1))
+map('state', resolution=0, lwd=0.5, col="dark gray")
+map('state', resolution=0, fill=TRUE, col=name$idcol2011, boundary="light gray", lwd=0.5, add=TRUE)
+map('state', resolution=0, add=TRUE)
+map('state', region=c("Iowa", "Texas", "California", 
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),
+    resolution=0, col="dark blue", add=TRUE, lwd=2)
+colorlegend(col=cols, zval=c(0, 2.8, 7.4, 20.1, 54.6, 148.4, 403.4, 1083), zlim=c(1, 1111), log=TRUE, posx=c(0.8, 0.83), posy=c(0.22, 0.6), digit=0, cex=0.2)
+
+dev.off()
+
+
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/mapforholly.tiff",
+width = 140, height = 90, units = "mm", res=600, compression="lzw")
+par(mai=c(1,1,1,1))
+map('state', resolution=0, lwd=1)
+map('state', region=c("Iowa", "Texas", "California", 
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),
+    resolution=0, col="dark blue", add=TRUE, lwd=2)
+map('state', region=c("Iowa", "Texas", "California", 
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),
+    resolution=0, col="light blue", add=TRUE, fill=TRUE)
+dev.off()

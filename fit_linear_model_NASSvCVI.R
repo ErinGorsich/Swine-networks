@@ -112,7 +112,7 @@ hist(log(cvidata10$NumFarms))
 # add in NASS data and groom
 ###############################################
 ###############################################        
-NASS<-read.csv("NASS2012.csv")         
+NASS<-read.csv("NASS2012.csv")          # cleaned Operations with Inventory
 dataframe=NASS 
 dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  
 dataframe<-dataframe[!is.na(dataframe$Value),]

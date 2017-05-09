@@ -1,217 +1,3 @@
-inv$Value<-as.numeric(inv$Value)
-head(inv)
-inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
-head(inv)
-inv$Value<-as.numeric(as.character(inv$Value))
-head(inv)
-summary(inv)
-inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
-inv<-get_useful_parts(inv)
-head(inv)
-summary(inv)
-inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
-inv<-get_useful_parts(inv)
-head(inv)
-summary(inv)
-inv[!is.na(inv$value)]
-head(inv)
-inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
-length(inv[,1])
-length(inv$Value[!is.na(inv$Valuee)])
-inv$Value<-as.numeic(as.character(inv$Value))
-inv$Value<-as.numeric(as.character(inv$Value))
-head(inv)
-length(inv$Value)
-length(inv$Value[!is.na(inv$Value)])
-test<-inv[!is.na(inv$Value),]
-length(test[,1])
-test$Value2<-as.numeric(gsub(",", "", test$Value))
-head(test)
-summary(test)
-head(test)
-newcol<-NA#
-standardize<-function(column){#
-	for (i in 1:length(column)){#
-	newcol[i]<-(column[i]-mean(column))/sd(column)#
-}#
-	return(newcol)#
-}#
-#
-newdataframe<-NA#
-get_useful_parts<-function(dataframe){#
-	###########################
-	### This function takes a dataframe.  It#
-	#  1) extracts the useful columns (value, State/County ID/ Value),#
-	# 	2) makes a new column, valsd, containing standardized version of Value, 3) creates a new column,#
-	# FIPS= complete county ID that should match our datasets, and 4) returs a clean dataset.  #
-	### Ins/Outs#
-	# Input= dataframe directly downloaded from NASS#
-	# Name as output an INFORMATIVE name!!!!  I do not keep track of what things are what!#
-	###########################
-#
-	# Clean dataframe by removing NAs#
-	dataframe<-dataframe[dataframe$Geo.Level=="COUNTY",]#
-	dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  #
-	# Get rid of commas in the Value column, standardize the Value, put in new column, "valsd"#
-	dataframe$Value<-as.numeric(as.character(dataframe$Value))#
-	dataframe<-dataframe[!is.na(dataframe$Value),]  # repeat, some NAs not removed earlier#
-	dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))#
-	dataframe$valsd<-standardize(dataframe$Value2)#
-	dataframe$FIPS<-NA#
-	# create FIPS column, that merges the StateID and column ID#
-	for (i in 1:length(dataframe[,1])){#
-		if (dataframe$County.ANSI[i]<10) {#
-		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="00")#
-	}#
-	else if (dataframe$County.ANSI[i]<100 & dataframe$County.ANSI[i]>=10){#
-		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="0")#
-	}#
-	else {dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="")#
-		}	#
-	}#
-	# Subset and rename things so it is easier to work with#
-	newdataframe<- dataframe[,colnames(dataframe) %in% c("Year", "State.ANSI", "County.ANSI", "Value2", "valsd", "FIPS")]#
-	new= data.frame(FIPS= newdataframe$FIPS, year= newdataframe$Year, stateFIPS=newdataframe$State.ANSI, countyFIPS=newdataframe$County.ANSI, value=newdataframe$Value2, valuesd=newdataframe$valsd)#
-	return(new)#
-}
-inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
-inv2<-get_useful_parts(inv)
-head(inv2)
-inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")
-head(inv_p)
-summary(inv_p)
-length(inv_p[,1])
-length(inv_p$Year[inv_p$Year=="2012"])
-inv_p<-get_useful_parts(inv_p[inv_p$Year=="2012",])
-head(inv_p)
-inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")
-inv_p<-inv_p[inv_p$Year=="2012",]
-inv_p2<-get_useful_parts(inv_p)
-head(inv_p)
-head(inv_p2)
-summary(inv_p)
-inv_p$test<-as.numeric(as.character(inv$Value))
-summary(inv_p)
-inv_p$test<-as.numeric(as.character(inv_p$Value))
-summary(inv_p)
-inv_p$test<-as.character(inv_p$Value)
-summary(inv_p)
-head(inv_p)
-get_useful_parts<-function(dataframe){#
-	###########################
-	### This function takes a dataframe.  It#
-	#  1) extracts the useful columns (value, State/County ID/ Value),#
-	# 	2) makes a new column, valsd, containing standardized version of Value, 3) creates a new column,#
-	# FIPS= complete county ID that should match our datasets, and 4) returs a clean dataset.  #
-	### Ins/Outs#
-	# Input= dataframe directly downloaded from NASS#
-	# Name as output an INFORMATIVE name!!!!  I do not keep track of what things are what!#
-	###########################
-#
-	# Clean dataframe by removing NAs#
-	dataframe<-dataframe[dataframe$Geo.Level=="COUNTY",]#
-	dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  #
-	# Get rid of commas in the Value column, standardize the Value, put in new column, "valsd"#
-	dataframe$Value<-as.character(dataframe$Value)#
-	dataframe<-dataframe[!is.na(dataframe$Value),]  # repeat, some NAs not removed earlier#
-	dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))#
-	dataframe$valsd<-standardize(dataframe$Value2)#
-	dataframe$FIPS<-NA#
-	# create FIPS column, that merges the StateID and column ID#
-	for (i in 1:length(dataframe[,1])){#
-		if (dataframe$County.ANSI[i]<10) {#
-		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="00")#
-	}#
-	else if (dataframe$County.ANSI[i]<100 & dataframe$County.ANSI[i]>=10){#
-		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="0")#
-	}#
-	else {dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="")#
-		}	#
-	}#
-	# Subset and rename things so it is easier to work with#
-	newdataframe<- dataframe[,colnames(dataframe) %in% c("Year", "State.ANSI", "County.ANSI", "Value2", "valsd", "FIPS")]#
-	new= data.frame(FIPS= newdataframe$FIPS, year= newdataframe$Year, stateFIPS=newdataframe$State.ANSI, countyFIPS=newdataframe$County.ANSI, value=newdataframe$Value2, valuesd=newdataframe$valsd)#
-	return(new)#
-}
-inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
-inv2<-get_useful_parts(inv)
-head(inv2)
-get_useful_parts<-function(dataframe){#
-	###########################
-	### This function takes a dataframe.  It#
-	#  1) extracts the useful columns (value, State/County ID/ Value),#
-	# 	2) makes a new column, valsd, containing standardized version of Value, 3) creates a new column,#
-	# FIPS= complete county ID that should match our datasets, and 4) returs a clean dataset.  #
-	### Ins/Outs#
-	# Input= dataframe directly downloaded from NASS#
-	# Name as output an INFORMATIVE name!!!!  I do not keep track of what things are what!#
-	###########################
-#
-	# Clean dataframe by removing NAs#
-	dataframe<-dataframe[dataframe$Geo.Level=="COUNTY",]#
-	dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  #
-	# Get rid of commas in the Value column, standardize the Value, put in new column, "valsd"#
-	dataframe$Value<-as.character(dataframe$Value)#
-	dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))#
-	dataframe<-dataframe[!is.na(dataframe$Value2),]  # repeat, some NAs not removed earlier#
-	dataframe$valsd<-standardize(dataframe$Value2)#
-	dataframe$FIPS<-NA#
-	# create FIPS column, that merges the StateID and column ID#
-	for (i in 1:length(dataframe[,1])){#
-		if (dataframe$County.ANSI[i]<10) {#
-		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="00")#
-	}#
-	else if (dataframe$County.ANSI[i]<100 & dataframe$County.ANSI[i]>=10){#
-		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="0")#
-	}#
-	else {dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="")#
-		}	#
-	}#
-	# Subset and rename things so it is easier to work with#
-	newdataframe<- dataframe[,colnames(dataframe) %in% c("Year", "State.ANSI", "County.ANSI", "Value2", "valsd", "FIPS")]#
-	new= data.frame(FIPS= newdataframe$FIPS, year= newdataframe$Year, stateFIPS=newdataframe$State.ANSI, countyFIPS=newdataframe$County.ANSI, value=newdataframe$Value2, valuesd=newdataframe$valsd)#
-	return(new)#
-}
-inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")
-inv2<-get_useful_parts(inv)
-head(inv2)
-toMatch <- c("A1", "A9", "A6")
-matches <- unique (grep(paste(toMatch,collapse="|"), #
-                        myfile$Letter, value=TRUE))
-head(inv_p)
-toMatch <- c("(D)", ",")
-matches <- unique(grep(paste(toMatch,collapse="|"), #
-                        inv_p$Value, value=TRUE))
-matches
-head(inv_p)
-summary(inv_p)
-test<-inv_p[inv_p$Value!="(D)",]
-summary(test)
-inv_p$Value<-as.character(inv_p$Value)
-summary(inv_p)
-test<-inv_p[inv_p$Value!="(D)",]
-summary(test)
-head(test, 20)
-head(test[test$Value=="(D)"])
-head(test[test$Value=="(D)",])
-head(test[test$Value==(D),])
-inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")
-inv_p<-inv_p[inv_p$Year=="2012",]
-head(inv_p)
-summary(inv_p)
-inv_p$Value<-as.character(inv_p$Value)
-test<-inv_p[inv_p$Value!="(D)",]
-head(test, 10)
-test$Value2<-	gsub("(D)", "NA", test$Value))
-test$Value2<-	gsub("(D)", "NA", test$Value)
-head(test)
-test$Value3<-as.numeric(gsub(",", "", dataframe$Value2))
-test$Value3<-as.numeric(gsub(",", "", test$Value2))
-head(test)
-test$Value4<-as.numeric(gsub(",", "", test$Value))
-inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")
-inv_p<-inv_p[inv_p$Year=="2012",]
-inv_p2<-get_useful_parts(inv_p)
 head(inv_p2)
 inv_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_feeder_hogs_JUSTUSETOTAL.csv")
 summary(inv_f)
@@ -296,7 +82,6 @@ get_corr<-function(netval, nassval){#
 ?lapply
 ?sapply
 ?apply
-?apply
 ?lapply
 ?mapply
 listA <- list(matrix(rnorm(2000), nrow=10),#
@@ -378,7 +163,6 @@ ns2011$op<-op2$value[match(ns2011$NodeID, op2$FIPS)]#
 ns2011$op_p<- op_p2$value[match(ns2011$NodeID, op_p2$FIPS)]#
 ns2011$op_b<-op_b2$value[match(ns2011$NodeID, op_b2$FIPS)]
 nass10<-ns2010[,c(20:24)]; nass11<-ns2011[,c(20:24)]
-net10<-ns2010[,c(4,5,7,8,13)]; net11<-ns2011[,c(4,5,7,8,13)]
 net10<-ns2010[,c(4,5,7,8,13)]; net11<-ns2011[,c(4,5,7,8,13)]
 # want cor.test over each column#
 cor.test(net10[,1], nass10[,1], method="pearson")#
@@ -569,3 +353,1045 @@ get_corr(net10[,1], nass10[,1])
 get_corr(net10[,2], nass10[,1])
 arr2011
 arr11
+inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")#
+inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")#
+# state level only#
+#inv_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_feeder_hogs_JUSTUSETOTAL.csv")#
+inv_b<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_breeding.csv")#
+#
+## OPERATIONS#
+op<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_Inventory.csv")#
+op_p<-read.csv("~/Documents/post-doc/Swine/NASS/2012_NASS_HOGS_Operations_with_production.csv")#
+op_b<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_wtih_breeding_inventory.csv")#
+# state level only. #
+#op_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_with_farrowtofeeder_inventory.csv")#
+#
+inv2<-get_useful_parts(inv)#
+inv_p<-inv_p[inv_p$Year=="2012",]#
+inv_p2<-get_useful_parts(inv_p)#
+inv_b2<-get_useful_parts(inv_b)#
+#
+op2<-get_useful_parts(op)#
+op_p2<-get_useful_parts(op_p)#
+op_b<-op_b[op_b$Year=="2012" & op_b$Domain=="TOTAL",]#
+op_b2<-get_useful_parts(op_b)
+###################
+## functions used#
+newcol<-NA#
+standardize<-function(column){#
+	for (i in 1:length(column)){#
+	newcol[i]<-(column[i]-mean(column))/sd(column)#
+}#
+	return(newcol)#
+}#
+#
+newdataframe<-NA#
+get_useful_parts<-function(dataframe){#
+	###########################
+	### This function takes a dataframe.  It#
+	#  1) extracts the useful columns (value, State/County ID/ Value),#
+	# 	2) makes a new column, valsd, containing standardized version of Value, 3) creates a new column,#
+	# FIPS= complete county ID that should match our datasets, and 4) returs a clean dataset.  #
+	### Ins/Outs#
+	# Input= dataframe directly downloaded from NASS#
+	# Name as output an INFORMATIVE name!!!!  I do not keep track of what things are what!#
+	###########################
+#
+	# Clean dataframe by removing NAs#
+	dataframe<-dataframe[dataframe$Geo.Level=="COUNTY",]#
+	dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  #
+	# Get rid of commas in the Value column, standardize the Value, put in new column, "valsd"#
+	dataframe$Value<-as.character(dataframe$Value)#
+	dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))#
+	dataframe<-dataframe[!is.na(dataframe$Value2),]  # repeat, some NAs not removed earlier#
+	dataframe$valsd<-standardize(dataframe$Value2)#
+	dataframe$FIPS<-NA#
+	# create FIPS column, that merges the StateID and column ID#
+	for (i in 1:length(dataframe[,1])){#
+		if (dataframe$County.ANSI[i]<10) {#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="00")#
+	}#
+	else if (dataframe$County.ANSI[i]<100 & dataframe$County.ANSI[i]>=10){#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="0")#
+	}#
+	else {dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="")#
+		}	#
+	}#
+	# Subset and rename things so it is easier to work with#
+	newdataframe<- dataframe[,colnames(dataframe) %in% c("Year", "State.ANSI", "County.ANSI", "Value2", "valsd", "FIPS")]#
+	new= data.frame(FIPS= newdataframe$FIPS, year= newdataframe$Year, stateFIPS=newdataframe$State.ANSI, countyFIPS=newdataframe$County.ANSI, value=newdataframe$Value2, valuesd=newdataframe$valsd)#
+	return(new)#
+}
+inv2<-get_useful_parts(inv)#
+inv_p<-inv_p[inv_p$Year=="2012",]#
+inv_p2<-get_useful_parts(inv_p)#
+inv_b2<-get_useful_parts(inv_b)#
+#
+op2<-get_useful_parts(op)#
+op_p2<-get_useful_parts(op_p)#
+op_b<-op_b[op_b$Year=="2012" & op_b$Domain=="TOTAL",]#
+op_b2<-get_useful_parts(op_b)
+# only in states with data. #
+ns2010<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2010.csv")#
+ns2010$inv<-inv2$value[match(ns2010$NodeID, inv2$FIPS)]#
+ns2010$inv_p<-inv_p2$value[match(ns2010$NodeID, inv_p2$FIPS)]#
+ns2010$inv_b<-inv_b2$value[match(ns2010$NodeID, inv_b2$FIPS)]#
+ns2010$op<-op2$value[match(ns2010$NodeID, op2$FIPS)]#
+ns2010$op_p<- op_p2$value[match(ns2010$NodeID, op_p2$FIPS)]#
+ns2010$op_b<-op_b2$value[match(ns2010$NodeID, op_b2$FIPS)]#
+#
+ns2011<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2011all.csv")#
+ns2011$inv<-inv2$value[match(ns2011$NodeID, inv2$FIPS)]#
+ns2011$inv_p<-inv_p2$value[match(ns2011$NodeID, inv_p2$FIPS)]#
+ns2011$inv_b<-inv_b2$value[match(ns2011$NodeID, inv_b2$FIPS)]#
+#
+ns2011$op<-op2$value[match(ns2011$NodeID, op2$FIPS)]#
+ns2011$op_p<- op_p2$value[match(ns2011$NodeID, op_p2$FIPS)]#
+ns2011$op_b<-op_b2$value[match(ns2011$NodeID, op_b2$FIPS)]#
+#
+# test for correlations #
+net10<-ns2010[,c(4,5,7,8,13)]; net11<-ns2011[,c(4,5,7,8,13)]#
+nass10<-ns2010[,c(20:25)]; nass11<-ns2011[,c(20:25)]#
+# want cor.test over each column#
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-c(temp$estimate[[1]], temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+	return(results) 	#
+}#
+#
+lnet<-5 #
+lnass<- 6#
+arr10<-array(,dim=c(lnass, 4, lnet), dimnames=list(colnames(nass10), c("est", "LCI", "UCI", "p")))#
+arr11<-arr10#
+# one matrix per network property- 4 columns per array with answers to get_corr#
+# each row is a comparison to lnas column namae#
+#
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		arr10[j,,i]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		arr11[j,,i]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+head(net10)
+arr10
+head(ns)
+head(ns10)
+summary(ns2010)
+table(ns2010$StateID)
+arr11
+summary(net10)
+summary(node10)
+summary(nass)
+head(nass10)
+summary(inv)
+summary(op)
+head(inv)
+head(inv_p)
+head(inv_b)
+head(op)
+head(op_p)
+head(op_b)
+head(op)
+head(op2)
+op3=data.frame(FIPS=unique(op2$FIPS))
+op3=data.frame(FIPS=unique(op2$FIPS))#
+for (i in 1:length(op3$FIPS)){#
+val=op3$FIPS[i]#
+tempdf=op2[op2$FIPS==val,]#
+op3$newvalue[i]=sum(tempdf$value)#
+}
+head(op3)
+summary(op3)
+ns2011$op<-op3$newvalue[match(ns2011$NodeID, op3$FIPS)]
+ns2010$op<-op3$newvalue[match(ns2010$NodeID, op3$FIPS)]
+# test for correlations #
+net10<-ns2010[,c(4,5,7,8,13)]; net11<-ns2011[,c(4,5,7,8,13)]#
+nass10<-ns2010[,c(20:25)]; nass11<-ns2011[,c(20:25)]#
+# want cor.test over each column#
+get_corr<-function(netval, nassval){#
+	temp<-cor.test(netval, nassval)  # method="pearson" as default#
+	results<-c(temp$estimate[[1]], temp$conf.int[1], temp$conf.int[2], temp$p.value)#
+	return(results) 	#
+}#
+#
+lnet<-5 #
+lnass<- 6#
+arr10<-array(,dim=c(lnass, 4, lnet), dimnames=list(colnames(nass10), c("est", "LCI", "UCI", "p")))#
+arr11<-arr10#
+# one matrix per network property- 4 columns per array with answers to get_corr#
+# each row is a comparison to lnas column namae#
+#
+for (i in 1:lnet){#
+	for (j in 1:lnass){#
+		arr10[j,,i]<-get_corr(netval=net10[,i], nassval=nass10[,j])#
+		arr11[j,,i]<-get_corr(netval=net11[,i], nassval=nass11[,j])#
+	}#
+}
+arr10
+arr11
+###################
+## functions used#
+newcol<-NA#
+standardize<-function(column){#
+	for (i in 1:length(column)){#
+	newcol[i]<-(column[i]-mean(column))/sd(column)#
+}#
+	return(newcol)#
+}#
+#
+newdataframe<-NA#
+get_useful_parts<-function(dataframe){#
+	###########################
+	### This function takes a dataframe.  It#
+	#  1) extracts the useful columns (value, State/County ID/ Value),#
+	# 	2) makes a new column, valsd, containing standardized version of Value, 3) creates a new column,#
+	# FIPS= complete county ID that should match our datasets, and 4) returs a clean dataset.  #
+	### Ins/Outs#
+	# Input= dataframe directly downloaded from NASS#
+	# Name as output an INFORMATIVE name!!!!  I do not keep track of what things are what!#
+	###########################
+#
+	# Clean dataframe by removing NAs#
+	dataframe<-dataframe[dataframe$Geo.Level=="COUNTY",]#
+	dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  #
+	# Get rid of commas in the Value column, standardize the Value, put in new column, "valsd"#
+	dataframe$Value<-as.character(dataframe$Value)#
+	dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))#
+	dataframe<-dataframe[!is.na(dataframe$Value2),]  # repeat, some NAs not removed earlier#
+	dataframe$valsd<-standardize(dataframe$Value2)#
+	dataframe$FIPS<-NA#
+	# create FIPS column, that merges the StateID and column ID#
+	for (i in 1:length(dataframe[,1])){#
+		if (dataframe$County.ANSI[i]<10) {#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="00")#
+	}#
+	else if (dataframe$County.ANSI[i]<100 & dataframe$County.ANSI[i]>=10){#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="0")#
+	}#
+	else {dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="")#
+		}	#
+	}#
+	# Subset and rename things so it is easier to work with#
+	newdataframe<- dataframe[,colnames(dataframe) %in% c("Year", "State.ANSI", "County.ANSI", "Value2", "valsd", "FIPS")]#
+	new= data.frame(FIPS= newdataframe$FIPS, year= newdataframe$Year, stateFIPS=newdataframe$State.ANSI, countyFIPS=newdataframe$County.ANSI, value=newdataframe$Value2, valuesd=newdataframe$valsd)#
+	return(new)#
+}#
+#################
+# NASS data used in project- make sure only one data item; one domain in dataset; one year. #
+# function specifies geo level and removes NAs. #
+## INVENTORY#
+inv<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory.csv")#
+inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")#
+# state level only#
+#inv_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_feeder_hogs_JUSTUSETOTAL.csv")#
+inv_b<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_breeding.csv")#
+#
+## OPERATIONS#
+op<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_Inventory.csv")#
+op_p<-read.csv("~/Documents/post-doc/Swine/NASS/2012_NASS_HOGS_Operations_with_production.csv")#
+op_b<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_wtih_breeding_inventory.csv")#
+# state level only. #
+#op_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_with_farrowtofeeder_inventory.csv")#
+#
+inv2<-get_useful_parts(inv)#
+inv_p<-inv_p[inv_p$Year=="2012",]#
+inv_p2<-get_useful_parts(inv_p)#
+inv_b2<-get_useful_parts(inv_b)#
+#
+op2<-get_useful_parts(op)  # only file with multiple rows per county, have to sum them. #
+op3=data.frame(FIPS=unique(op2$FIPS))#
+for (i in 1:length(op3$FIPS)){#
+val=op3$FIPS[i]#
+tempdf=op2[op2$FIPS==val,]#
+op3$newvalue[i]=sum(tempdf$value)#
+}#
+#
+op_p2<-get_useful_parts(op_p)#
+op_b<-op_b[op_b$Year=="2012" & op_b$Domain=="TOTAL",]#
+op_b2<-get_useful_parts(op_b)#
+#
+####################
+# correlations with node stats (in-degree, out-degree, weighted in-degree, weighted out-degree, betweenness)#
+# only in states with data. #
+ns2010<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2010.csv")#
+ns2010$inv<-inv2$value[match(ns2010$NodeID, inv2$FIPS)]#
+ns2010$inv_p<-inv_p2$value[match(ns2010$NodeID, inv_p2$FIPS)]#
+ns2010$inv_b<-inv_b2$value[match(ns2010$NodeID, inv_b2$FIPS)]#
+ns2010$op<-op3$newvalue[match(ns2010$NodeID, op3$FIPS)]#
+ns2010$op_p<- op_p2$value[match(ns2010$NodeID, op_p2$FIPS)]#
+ns2010$op_b<-op_b2$value[match(ns2010$NodeID, op_b2$FIPS)]#
+#
+ns2011<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2011all.csv")#
+ns2011$inv<-inv2$value[match(ns2011$NodeID, inv2$FIPS)]#
+ns2011$inv_p<-inv_p2$value[match(ns2011$NodeID, inv_p2$FIPS)]#
+ns2011$inv_b<-inv_b2$value[match(ns2011$NodeID, inv_b2$FIPS)]#
+#
+ns2011$op<-op3$newvalue[match(ns2011$NodeID, op3$FIPS)]#
+ns2011$op_p<- op_p2$value[match(ns2011$NodeID, op_p2$FIPS)]#
+ns2011$op_b<-op_b2$value[match(ns2011$NodeID, op_b2$FIPS)]
+write.csv(ns1010, "~/Documents/post-doc/Swine/NASS/ns2010_comparisonwithnass.csv")
+head(ns2010)
+write.csv(ns2010, "~/Documents/post-doc/Swine/NASS/ns2010_comparisonwithnass.csv")
+write.csv(ns2011, "~/Documents/post-doc/Swine/NASS/ns2011_comparisonwithnass.csv")
+net.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2011all.csv")#
+node.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011all.csv")
+net.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2011all.csv")#
+node.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011all.csv")#
+net.stats_st_2010<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2010.csv")#
+node.stats_st_2010<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2010.csv")#
+data(state.fips)#
+#
+# Map of out degree= blue; In degree by state= red; betweeness= green. #
+#
+# Out degree= #
+ctname<-map('state', resolution=0, plot=FALSE)$names#
+ctname<-as.matrix(ctname)#
+data(state.fips)#
+node.stats_st_2010$COUNTY_NAME_R<-state.fips$polyname[match(node.stats_st_2010$NodeID, state.fips$fips)]#
+node.stats_st_2011$COUNTY_NAME_R<-state.fips$polyname[match(node.stats_st_2011$NodeID, state.fips$fips)]#
+#
+name<-data.frame(ctname=ctname, OutDegreeShip2010=NA, OutDegreeSwine2010=NA, OutDegreeShip2011=NA, OutDegreeSwine2011=NA, InDegreeShip2010=NA, InDegreeSwine2010=NA, InDegreeShip2011=NA, InDegreeSwine2011=NA, Betweenness2010=NA, Betweenness2011=NA)#
+# fill outdegree columns#
+name$OutDegreeShip2010<-node.stats_st_2010$OutDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$OutDegreeSwine2010<-node.stats_st_2010$OutDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$OutDegreeShip2010[is.na(name$OutDegreeShip2010)]<-0#
+name$OutDegreeSwine2010[is.na(name$OutDegreeSwine2010)]<-0#
+name$OutDegreeShip2011<-node.stats_st_2011$OutDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$OutDegreeSwine2011<-node.stats_st_2011$OutDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$OutDegreeShip2011[is.na(name$OutDegreeShip2011)]<-0#
+name$OutDegreeSwine2011[is.na(name$OutDegreeSwine2011)]<-0#
+# fill indegree columns#
+name$InDegreeShip2010<-node.stats_st_2010$InDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$InDegreeSwine2010<-node.stats_st_2010$InDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$InDegreeShip2010[is.na(name$InDegreeShip2010)]<-0#
+name$InDegreeSwine2010[is.na(name$InDegreeSwine2010)]<-0#
+name$InDegreeShip2011<-node.stats_st_2011$InDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$InDegreeSwine2011<-node.stats_st_2011$InDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$InDegreeShip2011[is.na(name$InDegreeShip2011)]<-0#
+name$InDegreeSwine2011[is.na(name$InDegreeSwine2011)]<-0#
+# Betweenness#
+name$Betweenness2010<-node.stats_st_2010$Betweenness[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$Betweenness2011<-node.stats_st_2011$Betweenness[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+#
+# try two color schemes... since shipments range from 0 to 172.  #
+#
+#############################
+# Make Out Degree Color Schemes & Plot 2010 & 2011#
+# 1) range of one color#
+cols <- colorRampPalette(brewer.pal(9, "PuBu"))(7)   # colors for level plots#
+colmatch<-data.frame(num=seq(0,7,1), col=c("white", cols))#
+name$OutDegreeShip2010[43]<-0#
+name$OutDegreeShip2010[29]<-0#
+#
+#log scale color#
+#name$ODbin2010<-NA; name$ODbin2011<-NA; name$col2010<-NA; name$col2011<-NA#
+#for (i in 1:length(name$OutDegreeShip2010)){#
+#	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}#
+#	else if (log(name$OutDegreeShip2010[i])>=0 & log(name$OutDegreeShip2010[i])<=1) {name$ODbin2010[i]<-1}#
+#	else if (log(name$OutDegreeShip2010[i])>1 & log(name$OutDegreeShip2010[i])<=2) {name$ODbin2010[i]<-2}#
+#	else if (log(name$OutDegreeShip2010[i])>2 & log(name$OutDegreeShip2010[i])<=3) {name$ODbin2010[i]<-3}#
+#	else if (log(name$OutDegreeShip2010[i])>3 & log(name$OutDegreeShip2010[i])<=4) {name$ODbin2010[i]<-4}#
+#	else if (log(name$OutDegreeShip2010[i])>4 & log(name$OutDegreeShip2010[i])<=5) {name$ODbin2010[i]<-5}#
+#	else if (log(name$OutDegreeShip2010[i])>5 & log(name$OutDegreeShip2010[i])<=6) {name$ODbin2010[i]<-6}#
+#	else if (log(name$OutDegreeShip2010[i])>6 & log(name$OutDegreeShip2010[i])<=7) {name$ODbin2010[i]<-7}#
+#}#
+#
+name$ODbin2010<-NA; name$ODbin2011<-NA; name$col2010<-NA; name$col2011<-NA#
+for (i in 1:length(name$OutDegreeShip2010)){#
+	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}#
+	else if ((name$OutDegreeShip2010[i])>=4 &(name$OutDegreeShip2010[i])<=200) {name$ODbin2010[i]<-2}#
+	else if ((name$OutDegreeShip2010[i])>200 &(name$OutDegreeShip2010[i])<=400) {name$ODbin2010[i]<-3}#
+	else if ((name$OutDegreeShip2010[i])>400 &(name$OutDegreeShip2010[i])<=600) {name$ODbin2010[i]<-4}#
+	else if ((name$OutDegreeShip2010[i])>600 &(name$OutDegreeShip2010[i])<=800) {name$ODbin2010[i]<-5}#
+	else if ((name$OutDegreeShip2010[i])>800 &(name$OutDegreeShip2010[i])<=1000) {name$ODbin2010[i]<-6}#
+	else if ((name$OutDegreeShip2010[i])>1000 &(name$OutDegreeShip2010[i])<=1200) {name$ODbin2010[i]<-7}#
+}#
+#
+name$col2010<-as.character(colmatch$col[match(name$ODbin2010, colmatch$num)])#
+name$col2010[is.na(name$col2010)]<-"#FFFFFF"#
+#
+name$col2010[39]<-name$col2010[38]  # fill in main NC with rest of NC#
+name$col2010[40]<-name$col2010[38]  # fill in main NC with rest of NC#
+#
+name$col2010[35]<-name$col2010[34]  # fill in main NY with rest of NY#
+name$col2010[36]<-name$col2010[34]#
+name$col2010[37]<-name$col2010[34]#
+name$col2010[43]<-"white"#
+#
+#for (i in 1:length(name$OutDegreeShip2011)){#
+#	if (name$OutDegreeShip2011[i]==0) {name$ODbin2011[i]<-0}#
+#	else if (log(name$OutDegreeShip2011[i])>=0 & log(name$OutDegreeShip2011[i])<=1) {name$ODbin2011[i]<-1}#
+#	else if (log(name$OutDegreeShip2011[i])>1 & log(name$OutDegreeShip2011[i])<=2) {name$ODbin2011[i]<-2}#
+#	else if (log(name$OutDegreeShip2011[i])>2 & log(name$OutDegreeShip2011[i])<=3) {name$ODbin2011[i]<-3}#
+#	else if (log(name$OutDegreeShip2011[i])>3 & log(name$OutDegreeShip2011[i])<=4) {name$ODbin2011[i]<-4}#
+#	else if (log(name$OutDegreeShip2011[i])>4 & log(name$OutDegreeShip2011[i])<=5) {name$ODbin2011[i]<-5}#
+#	else if (log(name$OutDegreeShip2011[i])>5 & log(name$OutDegreeShip2011[i])<=6) {name$ODbin2011[i]<-6}#
+#	else if (log(name$OutDegreeShip2011[i])>6 & log(name$OutDegreeShip2011[i])<=7) {name$ODbin2011[i]<-7}#
+#}#
+#
+for (i in 1:length(name$OutDegreeShip2011)){#
+	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}#
+	else if ((name$OutDegreeShip2011[i])>=4 &(name$OutDegreeShip2011[i])<=200) {name$ODbin2011[i]<-2}#
+	else if ((name$OutDegreeShip2011[i])>200 &(name$OutDegreeShip2011[i])<=400) {name$ODbin2011[i]<-3}#
+	else if ((name$OutDegreeShip2011[i])>400 &(name$OutDegreeShip2011[i])<=600) {name$ODbin2011[i]<-4}#
+	else if ((name$OutDegreeShip2011[i])>600 &(name$OutDegreeShip2011[i])<=800) {name$ODbin2011[i]<-5}#
+	else if ((name$OutDegreeShip2011[i])>800 &(name$OutDegreeShip2011[i])<=1000) {name$ODbin2011[i]<-6}#
+	else if ((name$OutDegreeShip2011[i])>1000 &(name$OutDegreeShip2011[i])<=1200) {name$ODbin2011[i]<-7}#
+}#
+#
+name$col2011<-as.character(colmatch$col[match(name$ODbin2011, colmatch$num)])#
+name$col2011[is.na(name$col2011)]<-"#FFFFFF"#
+#
+name$col2011[39]<-name$col2011[38]  # fill in main NC with rest of NC#
+name$col2011[40]<-name$col2011[38]  # fill in main NC with rest of NC#
+#
+name$col2011[35]<-name$col2011[34]  # fill in main NY with rest of NY#
+name$col2011[36]<-name$col2011[34]#
+name$col2011[37]<-name$col2011[34]
+##############################################
+##############################################
+library(maps)#
+library(igraph)#
+library(plyr)#
+library(RColorBrewer)#
+library(plotrix)#
+library(SDMTools)#
+library(shape)
+net.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2011all.csv")#
+node.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011all.csv")#
+net.stats_st_2010<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2010.csv")#
+node.stats_st_2010<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2010.csv")#
+data(state.fips)#
+#
+# Map of out degree= blue; In degree by state= red; betweeness= green. #
+#
+# Out degree= #
+ctname<-map('state', resolution=0, plot=FALSE)$names#
+ctname<-as.matrix(ctname)#
+data(state.fips)#
+node.stats_st_2010$COUNTY_NAME_R<-state.fips$polyname[match(node.stats_st_2010$NodeID, state.fips$fips)]#
+node.stats_st_2011$COUNTY_NAME_R<-state.fips$polyname[match(node.stats_st_2011$NodeID, state.fips$fips)]#
+#
+name<-data.frame(ctname=ctname, OutDegreeShip2010=NA, OutDegreeSwine2010=NA, OutDegreeShip2011=NA, OutDegreeSwine2011=NA, InDegreeShip2010=NA, InDegreeSwine2010=NA, InDegreeShip2011=NA, InDegreeSwine2011=NA, Betweenness2010=NA, Betweenness2011=NA)#
+# fill outdegree columns#
+name$OutDegreeShip2010<-node.stats_st_2010$OutDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$OutDegreeSwine2010<-node.stats_st_2010$OutDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$OutDegreeShip2010[is.na(name$OutDegreeShip2010)]<-0#
+name$OutDegreeSwine2010[is.na(name$OutDegreeSwine2010)]<-0#
+name$OutDegreeShip2011<-node.stats_st_2011$OutDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$OutDegreeSwine2011<-node.stats_st_2011$OutDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$OutDegreeShip2011[is.na(name$OutDegreeShip2011)]<-0#
+name$OutDegreeSwine2011[is.na(name$OutDegreeSwine2011)]<-0#
+# fill indegree columns#
+name$InDegreeShip2010<-node.stats_st_2010$InDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$InDegreeSwine2010<-node.stats_st_2010$InDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$InDegreeShip2010[is.na(name$InDegreeShip2010)]<-0#
+name$InDegreeSwine2010[is.na(name$InDegreeSwine2010)]<-0#
+name$InDegreeShip2011<-node.stats_st_2011$InDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$InDegreeSwine2011<-node.stats_st_2011$InDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$InDegreeShip2011[is.na(name$InDegreeShip2011)]<-0#
+name$InDegreeSwine2011[is.na(name$InDegreeSwine2011)]<-0#
+# Betweenness#
+name$Betweenness2010<-node.stats_st_2010$Betweenness[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$Betweenness2011<-node.stats_st_2011$Betweenness[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+#
+# try two color schemes... since shipments range from 0 to 172.  #
+#
+#############################
+# Make Out Degree Color Schemes & Plot 2010 & 2011#
+# 1) range of one color#
+cols <- colorRampPalette(brewer.pal(9, "PuBu"))(7)   # colors for level plots#
+colmatch<-data.frame(num=seq(0,7,1), col=c("white", cols))#
+name$OutDegreeShip2010[43]<-0#
+name$OutDegreeShip2010[29]<-0#
+#
+#log scale color#
+#name$ODbin2010<-NA; name$ODbin2011<-NA; name$col2010<-NA; name$col2011<-NA#
+#for (i in 1:length(name$OutDegreeShip2010)){#
+#	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}#
+#	else if (log(name$OutDegreeShip2010[i])>=0 & log(name$OutDegreeShip2010[i])<=1) {name$ODbin2010[i]<-1}#
+#	else if (log(name$OutDegreeShip2010[i])>1 & log(name$OutDegreeShip2010[i])<=2) {name$ODbin2010[i]<-2}#
+#	else if (log(name$OutDegreeShip2010[i])>2 & log(name$OutDegreeShip2010[i])<=3) {name$ODbin2010[i]<-3}#
+#	else if (log(name$OutDegreeShip2010[i])>3 & log(name$OutDegreeShip2010[i])<=4) {name$ODbin2010[i]<-4}#
+#	else if (log(name$OutDegreeShip2010[i])>4 & log(name$OutDegreeShip2010[i])<=5) {name$ODbin2010[i]<-5}#
+#	else if (log(name$OutDegreeShip2010[i])>5 & log(name$OutDegreeShip2010[i])<=6) {name$ODbin2010[i]<-6}#
+#	else if (log(name$OutDegreeShip2010[i])>6 & log(name$OutDegreeShip2010[i])<=7) {name$ODbin2010[i]<-7}#
+#}#
+#
+name$ODbin2010<-NA; name$ODbin2011<-NA; name$col2010<-NA; name$col2011<-NA#
+for (i in 1:length(name$OutDegreeShip2010)){#
+	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}#
+	else if ((name$OutDegreeShip2010[i])>=4 &(name$OutDegreeShip2010[i])<=200) {name$ODbin2010[i]<-2}#
+	else if ((name$OutDegreeShip2010[i])>200 &(name$OutDegreeShip2010[i])<=400) {name$ODbin2010[i]<-3}#
+	else if ((name$OutDegreeShip2010[i])>400 &(name$OutDegreeShip2010[i])<=600) {name$ODbin2010[i]<-4}#
+	else if ((name$OutDegreeShip2010[i])>600 &(name$OutDegreeShip2010[i])<=800) {name$ODbin2010[i]<-5}#
+	else if ((name$OutDegreeShip2010[i])>800 &(name$OutDegreeShip2010[i])<=1000) {name$ODbin2010[i]<-6}#
+	else if ((name$OutDegreeShip2010[i])>1000 &(name$OutDegreeShip2010[i])<=1200) {name$ODbin2010[i]<-7}#
+}#
+#
+name$col2010<-as.character(colmatch$col[match(name$ODbin2010, colmatch$num)])#
+name$col2010[is.na(name$col2010)]<-"#FFFFFF"#
+#
+name$col2010[39]<-name$col2010[38]  # fill in main NC with rest of NC#
+name$col2010[40]<-name$col2010[38]  # fill in main NC with rest of NC#
+#
+name$col2010[35]<-name$col2010[34]  # fill in main NY with rest of NY#
+name$col2010[36]<-name$col2010[34]#
+name$col2010[37]<-name$col2010[34]#
+name$col2010[43]<-"white"#
+#
+#for (i in 1:length(name$OutDegreeShip2011)){#
+#	if (name$OutDegreeShip2011[i]==0) {name$ODbin2011[i]<-0}#
+#	else if (log(name$OutDegreeShip2011[i])>=0 & log(name$OutDegreeShip2011[i])<=1) {name$ODbin2011[i]<-1}#
+#	else if (log(name$OutDegreeShip2011[i])>1 & log(name$OutDegreeShip2011[i])<=2) {name$ODbin2011[i]<-2}#
+#	else if (log(name$OutDegreeShip2011[i])>2 & log(name$OutDegreeShip2011[i])<=3) {name$ODbin2011[i]<-3}#
+#	else if (log(name$OutDegreeShip2011[i])>3 & log(name$OutDegreeShip2011[i])<=4) {name$ODbin2011[i]<-4}#
+#	else if (log(name$OutDegreeShip2011[i])>4 & log(name$OutDegreeShip2011[i])<=5) {name$ODbin2011[i]<-5}#
+#	else if (log(name$OutDegreeShip2011[i])>5 & log(name$OutDegreeShip2011[i])<=6) {name$ODbin2011[i]<-6}#
+#	else if (log(name$OutDegreeShip2011[i])>6 & log(name$OutDegreeShip2011[i])<=7) {name$ODbin2011[i]<-7}#
+#}#
+#
+for (i in 1:length(name$OutDegreeShip2011)){#
+	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}#
+	else if ((name$OutDegreeShip2011[i])>=4 &(name$OutDegreeShip2011[i])<=200) {name$ODbin2011[i]<-2}#
+	else if ((name$OutDegreeShip2011[i])>200 &(name$OutDegreeShip2011[i])<=400) {name$ODbin2011[i]<-3}#
+	else if ((name$OutDegreeShip2011[i])>400 &(name$OutDegreeShip2011[i])<=600) {name$ODbin2011[i]<-4}#
+	else if ((name$OutDegreeShip2011[i])>600 &(name$OutDegreeShip2011[i])<=800) {name$ODbin2011[i]<-5}#
+	else if ((name$OutDegreeShip2011[i])>800 &(name$OutDegreeShip2011[i])<=1000) {name$ODbin2011[i]<-6}#
+	else if ((name$OutDegreeShip2011[i])>1000 &(name$OutDegreeShip2011[i])<=1200) {name$ODbin2011[i]<-7}#
+}#
+#
+name$col2011<-as.character(colmatch$col[match(name$ODbin2011, colmatch$num)])#
+name$col2011[is.na(name$col2011)]<-"#FFFFFF"#
+#
+name$col2011[39]<-name$col2011[38]  # fill in main NC with rest of NC#
+name$col2011[40]<-name$col2011[38]  # fill in main NC with rest of NC#
+#
+name$col2011[35]<-name$col2011[34]  # fill in main NY with rest of NY#
+name$col2011[36]<-name$col2011[34]#
+name$col2011[37]<-name$col2011[34]
+par(mai=c(1,1,1,1))#
+map('state', resolution=0, lwd=0.5, col="dark gray")#
+map('state', resolution=0, fill=TRUE, col=name$col2011, boundary="light gray", lwd=0.5, add=TRUE)#
+map('state', resolution=0, add=TRUE)#
+map('state', region=c("Iowa", "Texas", "California", #
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),#
+    resolution=0, col="dark blue", add=TRUE, lwd=2)#
+colorlegend(col=col2, zval=c(0, 200, 400, 600, 800, 1000, 1200), zlim=c(1, 1200), log=FALSE, posx=c(0.8, 0.83), posy=c(0.22, 0.6), digit=0, cex=0.2)
+summary(node.stats_st_2011)
+table(node.stats_st_2011$StateID)
+table(node.stats_st_2011$NodeID)
+table(node.stats_st_2011$NodeID[node.stats_st_2011$OutDegree_ship>0])
+temp<-node.stats_st_2011[node.stats_st_2011$OutDegree_ship>0,]
+head(temp)
+head(node.stats_st_2011)
+temp<-node.stats_st_2011[node.stats_st_2011$OutDegree_Ship>0,]
+table(temp$NodeID)
+temp[temp$NodeID=="31",]
+net.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2011all.csv")#
+node.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011all.csv")#
+net.stats_st_2010<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2010.csv")#
+node.stats_st_2010<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2010.csv")#
+data(state.fips)#
+#
+# Map of out degree= blue; In degree by state= red; betweeness= green. #
+#
+# Out degree= #
+ctname<-map('state', resolution=0, plot=FALSE)$names#
+ctname<-as.matrix(ctname)#
+data(state.fips)#
+node.stats_st_2010$COUNTY_NAME_R<-state.fips$polyname[match(node.stats_st_2010$NodeID, state.fips$fips)]#
+node.stats_st_2011$COUNTY_NAME_R<-state.fips$polyname[match(node.stats_st_2011$NodeID, state.fips$fips)]#
+#
+name<-data.frame(ctname=ctname, OutDegreeShip2010=NA, OutDegreeSwine2010=NA, OutDegreeShip2011=NA, OutDegreeSwine2011=NA, InDegreeShip2010=NA, InDegreeSwine2010=NA, InDegreeShip2011=NA, InDegreeSwine2011=NA, Betweenness2010=NA, Betweenness2011=NA)#
+# fill outdegree columns#
+name$OutDegreeShip2010<-node.stats_st_2010$OutDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$OutDegreeSwine2010<-node.stats_st_2010$OutDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$OutDegreeShip2010[is.na(name$OutDegreeShip2010)]<-0#
+name$OutDegreeSwine2010[is.na(name$OutDegreeSwine2010)]<-0#
+name$OutDegreeShip2011<-node.stats_st_2011$OutDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$OutDegreeSwine2011<-node.stats_st_2011$OutDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$OutDegreeShip2011[is.na(name$OutDegreeShip2011)]<-0#
+name$OutDegreeSwine2011[is.na(name$OutDegreeSwine2011)]<-0#
+# fill indegree columns#
+name$InDegreeShip2010<-node.stats_st_2010$InDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$InDegreeSwine2010<-node.stats_st_2010$InDegree_Ship[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$InDegreeShip2010[is.na(name$InDegreeShip2010)]<-0#
+name$InDegreeSwine2010[is.na(name$InDegreeSwine2010)]<-0#
+name$InDegreeShip2011<-node.stats_st_2011$InDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$InDegreeSwine2011<-node.stats_st_2011$InDegree_Ship[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]#
+name$InDegreeShip2011[is.na(name$InDegreeShip2011)]<-0#
+name$InDegreeSwine2011[is.na(name$InDegreeSwine2011)]<-0#
+# Betweenness#
+name$Betweenness2010<-node.stats_st_2010$Betweenness[match(name$ctname, node.stats_st_2010$COUNTY_NAME_R)]#
+name$Betweenness2011<-node.stats_st_2011$Betweenness[match(name$ctname, node.stats_st_2011$COUNTY_NAME_R)]
+head(name)
+name[name$ctname=="nebraska"]
+name[name$ctname=="nebraska",]
+exp(6)
+exp(7)
+cols <- colorRampPalette(brewer.pal(9, "PuBu"))(7)   # colors for level plots#
+colmatch<-data.frame(num=seq(0,7,1), col=c("white", cols))#
+name$OutDegreeShip2010[43]<-0#
+name$OutDegreeShip2010[29]<-0#
+#
+#log scale color#
+#name$ODbin2010<-NA; name$ODbin2011<-NA; name$col2010<-NA; name$col2011<-NA#
+#for (i in 1:length(name$OutDegreeShip2010)){#
+#	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}#
+#	else if (log(name$OutDegreeShip2010[i])>=0 & log(name$OutDegreeShip2010[i])<=1) {name$ODbin2010[i]<-1}#
+#	else if (log(name$OutDegreeShip2010[i])>1 & log(name$OutDegreeShip2010[i])<=2) {name$ODbin2010[i]<-2}#
+#	else if (log(name$OutDegreeShip2010[i])>2 & log(name$OutDegreeShip2010[i])<=3) {name$ODbin2010[i]<-3}#
+#	else if (log(name$OutDegreeShip2010[i])>3 & log(name$OutDegreeShip2010[i])<=4) {name$ODbin2010[i]<-4}#
+#	else if (log(name$OutDegreeShip2010[i])>4 & log(name$OutDegreeShip2010[i])<=5) {name$ODbin2010[i]<-5}#
+#	else if (log(name$OutDegreeShip2010[i])>5 & log(name$OutDegreeShip2010[i])<=6) {name$ODbin2010[i]<-6}#
+#	else if (log(name$OutDegreeShip2010[i])>6 & log(name$OutDegreeShip2010[i])<=7) {name$ODbin2010[i]<-7}#
+#}#
+#
+name$ODbin2010<-NA; name$ODbin2011<-NA; name$col2010<-NA; name$col2011<-NA#
+for (i in 1:length(name$OutDegreeShip2010)){#
+	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}#
+	else if ((name$OutDegreeShip2010[i])>=4 &(name$OutDegreeShip2010[i])<=200) {name$ODbin2010[i]<-2}#
+	else if ((name$OutDegreeShip2010[i])>200 &(name$OutDegreeShip2010[i])<=400) {name$ODbin2010[i]<-3}#
+	else if ((name$OutDegreeShip2010[i])>400 &(name$OutDegreeShip2010[i])<=600) {name$ODbin2010[i]<-4}#
+	else if ((name$OutDegreeShip2010[i])>600 &(name$OutDegreeShip2010[i])<=800) {name$ODbin2010[i]<-5}#
+	else if ((name$OutDegreeShip2010[i])>800 &(name$OutDegreeShip2010[i])<=1000) {name$ODbin2010[i]<-6}#
+	else if ((name$OutDegreeShip2010[i])>1000 &(name$OutDegreeShip2010[i])<=1200) {name$ODbin2010[i]<-7}#
+}#
+#
+name$col2010<-as.character(colmatch$col[match(name$ODbin2010, colmatch$num)])#
+name$col2010[is.na(name$col2010)]<-"#FFFFFF"#
+#
+name$col2010[39]<-name$col2010[38]  # fill in main NC with rest of NC#
+name$col2010[40]<-name$col2010[38]  # fill in main NC with rest of NC#
+#
+name$col2010[35]<-name$col2010[34]  # fill in main NY with rest of NY#
+name$col2010[36]<-name$col2010[34]#
+name$col2010[37]<-name$col2010[34]#
+name$col2010[43]<-"white"#
+#
+#for (i in 1:length(name$OutDegreeShip2011)){#
+#	if (name$OutDegreeShip2011[i]==0) {name$ODbin2011[i]<-0}#
+#	else if (log(name$OutDegreeShip2011[i])>=0 & log(name$OutDegreeShip2011[i])<=1) {name$ODbin2011[i]<-1}#
+#	else if (log(name$OutDegreeShip2011[i])>1 & log(name$OutDegreeShip2011[i])<=2) {name$ODbin2011[i]<-2}#
+#	else if (log(name$OutDegreeShip2011[i])>2 & log(name$OutDegreeShip2011[i])<=3) {name$ODbin2011[i]<-3}#
+#	else if (log(name$OutDegreeShip2011[i])>3 & log(name$OutDegreeShip2011[i])<=4) {name$ODbin2011[i]<-4}#
+#	else if (log(name$OutDegreeShip2011[i])>4 & log(name$OutDegreeShip2011[i])<=5) {name$ODbin2011[i]<-5}#
+#	else if (log(name$OutDegreeShip2011[i])>5 & log(name$OutDegreeShip2011[i])<=6) {name$ODbin2011[i]<-6}#
+#	else if (log(name$OutDegreeShip2011[i])>6 & log(name$OutDegreeShip2011[i])<=7) {name$ODbin2011[i]<-7}#
+#}#
+#
+for (i in 1:length(name$OutDegreeShip2011)){#
+	if (name$OutDegreeShip2010[i]==0) {name$ODbin2010[i]<-0}#
+	else if ((name$OutDegreeShip2011[i])>=4 &(name$OutDegreeShip2011[i])<=200) {name$ODbin2011[i]<-2}#
+	else if ((name$OutDegreeShip2011[i])>200 &(name$OutDegreeShip2011[i])<=400) {name$ODbin2011[i]<-3}#
+	else if ((name$OutDegreeShip2011[i])>400 &(name$OutDegreeShip2011[i])<=600) {name$ODbin2011[i]<-4}#
+	else if ((name$OutDegreeShip2011[i])>600 &(name$OutDegreeShip2011[i])<=800) {name$ODbin2011[i]<-5}#
+	else if ((name$OutDegreeShip2011[i])>800 &(name$OutDegreeShip2011[i])<=1000) {name$ODbin2011[i]<-6}#
+	else if ((name$OutDegreeShip2011[i])>1000 &(name$OutDegreeShip2011[i])<=1200) {name$ODbin2011[i]<-7}#
+}
+name[name$ctname=="nebraska",]
+name$ODbin2011[name$ctname=="nebraska"]<-6
+name[name$ctname=="nebraska",]
+name$col2011<-as.character(colmatch$col[match(name$ODbin2011, colmatch$num)])#
+name$col2011[is.na(name$col2011)]<-"#FFFFFF"#
+#
+name$col2011[39]<-name$col2011[38]  # fill in main NC with rest of NC#
+name$col2011[40]<-name$col2011[38]  # fill in main NC with rest of NC#
+#
+name$col2011[35]<-name$col2011[34]  # fill in main NY with rest of NY#
+name$col2011[36]<-name$col2011[34]#
+name$col2011[37]<-name$col2011[34]
+head(name)
+name
+name[name$ctname=="nebraska",]
+par(mai=c(1,1,1,1))#
+map('state', resolution=0, lwd=0.5, col="dark gray")#
+map('state', resolution=0, fill=TRUE, col=name$col2011, boundary="light gray", lwd=0.5, add=TRUE)#
+map('state', resolution=0, add=TRUE)#
+map('state', region=c("Iowa", "Texas", "California", #
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),#
+    resolution=0, col="dark blue", add=TRUE, lwd=2)#
+colorlegend(col=col2, zval=c(0, 200, 400, 600, 800, 1000, 1200), zlim=c(1, 1200), log=FALSE, posx=c(0.8, 0.83), posy=c(0.22, 0.6), digit=0, cex=0.2)
+col2=cols[c(1,3:7)]#
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/OD2011.tiff",#
+width = 140, height = 90, units = "mm", res=600, compression="lzw")#
+par(mai=c(1,1,1,1))#
+map('state', resolution=0, lwd=0.5, col="dark gray")#
+map('state', resolution=0, fill=TRUE, col=name$col2011, boundary="light gray", lwd=0.5, add=TRUE)#
+map('state', resolution=0, add=TRUE)#
+map('state', region=c("Iowa", "Texas", "California", #
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),#
+    resolution=0, col="dark blue", add=TRUE, lwd=2)#
+colorlegend(col=col2, zval=c(0, 200, 400, 600, 800, 1000, 1200), zlim=c(1, 1200), log=FALSE, posx=c(0.8, 0.83), posy=c(0.22, 0.6), digit=0, cex=0.2)#
+dev.off()
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/mapforholly.tiff",#
+width = 140, height = 90, units = "mm", res=600, compression="lzw")#
+par(mai=c(1,1,1,1))#
+map('state', resolution=0, lwd=0.5, col="dark gray")#
+map('state', region=c("Iowa", "Texas", "California", #
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),#
+    resolution=0, col="dark blue", add=TRUE, lwd=2)#
+map('state', region=c("Iowa", "Texas", "California", #
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),#
+    resolution=0, col="light blue", add=TRUE, fill=TRUE)#
+dev.off()
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/mapforholly.tiff",#
+width = 140, height = 90, units = "mm", res=600, compression="lzw")#
+par(mai=c(1,1,1,1))#
+map('state', resolution=0, lwd=1, col="dark gray")#
+map('state', region=c("Iowa", "Texas", "California", #
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),#
+    resolution=0, col="dark blue", add=TRUE, lwd=2)#
+map('state', region=c("Iowa", "Texas", "California", #
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),#
+    resolution=0, col="light blue", add=TRUE, fill=TRUE)#
+dev.off()
+tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/mapforholly.tiff",#
+width = 140, height = 90, units = "mm", res=600, compression="lzw")#
+par(mai=c(1,1,1,1))#
+map('state', resolution=0, lwd=1)#
+map('state', region=c("Iowa", "Texas", "California", #
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),#
+    resolution=0, col="dark blue", add=TRUE, lwd=2)#
+map('state', region=c("Iowa", "Texas", "California", #
+    "Minnesota", "New York", "Nebraska", "North Carolina", "Wisconsin", "Nebraska"),#
+    resolution=0, col="light blue", add=TRUE, fill=TRUE)#
+dev.off()
+area<-read.csv("~/Documents/Sweden/premdata/Area.csv", header=FALSE)#
+beeffarms<-read.csv("~/Documents/Sweden/premdata/BeefFarms.csv", header=FALSE)#
+county<-read.csv("~/Documents/Sweden/premdata/County.csv",  header=FALSE)#
+fips<-read.csv("~/Documents/Sweden/premdata/Fips.csv",  header=FALSE)#
+meanwithincountydist<-read.csv("~/Documents/Sweden/premdata/MeanWithinCountyDistance.csv",  header=FALSE)#
+milkfarms<-read.csv("~/Documents/Sweden/premdata/MilkFarms.csv",  header=FALSE)#
+x<-read.csv("~/Documents/Sweden/premdata/X.csv",  header=FALSE)#
+y<-read.csv("~/Documents/Sweden/premdata/Y.csv",  header=FALSE)#
+state<-read.csv("~/Documents/Sweden/premdata/State.csv",  header=FALSE)
+head(area)
+head(county)
+head(fips)
+testpremdata2<-data.frame(PID=seq(1:length(fips[,1])), fips, x, y, fips, state, beeffarms+milkfarms)#
+colnames(testpremdata2)<-c("PID", "fips", "x", "y", "fips", "stateID" ,"totalfarms")#
+inflow<-read.csv("~/Documents/Sweden/NASS_inflowdata_1988to2009.csv")#
+inflow$Value2<-as.numeric(inflow$Value)#
+inflow$StateFIPS2<-as.factor(inflow$StateFIPS)#
+tapply(inflow$Value2, inflow$StateFIPS2, sum)
+temp<-data.frame(stateID=unique(inflow$StateFIPS2), inflow=NA)#
+for (i in 1:length(temp[,1])){#
+	temp$inflow[i]<-tapply(inflow$Value2, inflow$StateFIPS2, mean)[[i]]#
+}#
+testpremdata2$historicinflow<-NA#
+testpremdata2$inflow<-temp$inflow[match(testpremdata2$stateID, temp$stateID)]#
+numpremperstate<-NA#
+temp<-data.frame(stateID=unique(testpremdata2$stateID), numpremperstate=NA)#
+for (i in 1:length(temp[,1])){#
+	temp$numpremperstate[i]<-tapply(testpremdata2$totalfarms, testpremdata2$stateID, sum)[[i]]#
+}#
+testpremdata2$numpremperstate<-temp$numpremperstate[match(testpremdata2$stateID, temp$stateID)]#
+# had to sort out Washington DC#
+testpremdata2$inflow[is.na(testpremdata2$inflow)]<-260.3636  # gave Washington DC, marylands historical inflow#
+testpremdata2$numpremperstate[testpremdata2$stateID=="11"]<-3189#
+testpremdata2$totalfarms[testpremdata2$stateID=="11"]<-1  # and one farm??? #
+#
+testpremdata2$historicinflow<-testpremdata2$inflow/testpremdata2$numpremperstate  # meaninflowperprem#
+testpremdata2$weight<-testpremdata2$totalfarms*testpremdata2$historicinflow#
+testpremdata2$area<-area[,1]
+head(testpremdata2)
+prem<-read.table("~/Documents/Sweden/premdata_km.txt", sep="\t")#
+colnames(prem)<-c("PID", "fips", "x", "y", "fips", "stateID" ,"totalfarms", "historicinflow", "inflow", "numpremperstate", "weight", "area")#
+move<-read.table("~/Documents/Sweden/movementdata.txt", sep="\t")#
+colnames(move)<-c("PID", "o_fips", "d_fips")
+table(prem$stateID)
+move$oprem_match<-prem$fips[match(move$o_fips, prem$fips)]#
+move$dprem_match<-prem$fips[match(move$d_fips, prem$fips)]#
+summary(move)
+head(prem)
+net.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2011all.csv")#
+node.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011all.csv")#
+net.stats_st_2010<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2010.csv")#
+node.stats_st_2010<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2010.csv")
+summary(node.stats_st_2010)
+((0.999)^149)*150/factorial(149)
+0.999^149
+1/factorial(149)
+choose(40, 16)*(0.2^16)*(0.8^24)
+choose(40, 17)*(0.2^17)*(0.8^24)
+choose(40, 17)*(0.2^17)*(0.8^23)
+##########################
+library(VGAM)  # computes the Riemann's zeta function and its first two derivatives#
+library(copula) # does polylog #
+#library('gsl')  # also does zeta... not used#
+library(bbmle)#
+library(igraph)#
+library(MASS) #
+#library(Rmpfr)  #only load if need exact calculation of factorial#
+##########################
+##########################################
+##########################################
+# LOAD DATA#
+##########################################
+##########################################
+#
+# Data from Abel et al. 2013  #
+################################
+# not from a degree distribution, individual data given as in-degree and out-degree #
+# values are all social indegree+all social outdegree for each individual. #
+x_Abel_all<-c(44.4+27.8, 21+38, 21.7+33.9, 28+26, 19.6+28.7, 17+12.5, 25+2, 12.2+14.6, 13+16, 32.6+16.5)#
+x_Abel_all<-round(x_Abel_all)#
+#
+# Data from Aiello et al. 2013  #
+################################
+# Tortoise#
+Aiello_pre_data<-data.frame(mids=c(0,1,2), count=c(20, 8, 1), count2=c(23, 10, 3))#
+Aiello_pre_data<-Aiello_pre_data[-1, ]#
+#
+num<-seq(1:length(Aiello_pre_data[,1]))#
+for (i in 1:length(Aiello_pre_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Aiello_pre_data$mids[i], times= Aiello_pre_data$count[i])	)#
+}#
+x_Aiello_pre<- c(k1, k2)#
+#
+for (i in 1:length(Aiello_pre_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Aiello_pre_data$mids[i], times= Aiello_pre_data$count2[i])	)#
+}#
+x_Aiello_pre2<- c(k1, k2)#
+###################
+# Data from Ancilloto et al. 2015  CUT FROM DATASEST- EXPERIMENTAL#
+#x_Ancilloto_pc<-c(19, 7,7,14,10, 17, 17, 8,19, 15, 15, 7, 4,5,8,11,10,5,18,6,13,2,16) # not directed so degree is total.#
+#huddling<- c(27, 17+17, 29, 20, 9, 22, 29, 14, 10, 20,18,2,9,4,9,7,8,7,18,5,9,4,20)  				#rest are directed, summed outdegree and indegree for an individual#
+#allogrooming<-c(11, 12, 15, 11, 8,10,10, 7, 11, 18, 23,6, 0, 3, 12, 8, 9, 5, 12, 3, 9, 3, 8)#
+#aggression<- c( 7, 2, 3, 3, 2, 0, 3, 1, 3, 6, 4, 0, 3, 0,0,0,1,0,0, 1,3,1, 1)  # had to remove the 1.5 (set to average in study for whole numbers)#
+#x_Ancilloto_all<-(x_Ancilloto_pc+ huddling+ allogrooming+aggression)  #
+#Ancillotoa_data_pc<-data.frame(mids=seq(2:20), count=c(0,1,0,1,2,1,3,2,0,2,1,0,1,1,2,1,2,1,2 ))#
+# all= literally uniform(range=0-2 contacts per data type)#
+#
+# Data from Carne et al. 2013#
+################################
+# Orangutan#
+Carne_O_data<-data.frame(orig_mids =seq(0.1, 2.9, 0.2), count=c(11,4,8,2,3,0,1,3,2,0,0,1,1,1,0))#
+Carne_C_data<-data.frame(orig_mids =seq(0.5, 11.5, 1), count=c(7,6,6,2,4,4,5,7,4,8,2,0))#
+Carne_O_data$mids<- Carne_O_data$orig_mids*10#
+Carne_C_data$mids<-Carne_C_data$orig_mids+0.5#
+#
+num<-seq(1:length(Carne_O_data[,1]))#
+for (i in 1:length(Carne_O_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Carne_O_data$mids[i], times= Carne_O_data$count[i])	)#
+}#
+x_Carne_O<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15)#
+#
+num<-seq(1:length(Carne_C_data[,1]))#
+for (i in 1:length(Carne_C_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Carne_C_data$mids[i], times= Carne_C_data$count[i])	)#
+}#
+x_Carne_C<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12)#
+#
+# Data from Clay et al. 2009#
+################################
+# foraging arena data#
+Clay_data<-data.frame(mids=seq(1,11,1), count=c(29, 13, 5, 9, 2,3,3,2,3,2,2))#
+num<-seq(1:length(Clay_data[,1]))#
+for (i in 1:length(Clay_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Clay_data $mids[i], times= Clay_data $count[i]))#
+}#
+x_Clay<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10)#
+#
+# Data from Cross et al. 2012#
+################################
+Cross_data<-data.frame(mids=seq(1, 19, 2), value=c(0.0353, 0.053, 0.034, 0.02, 0.013, 0.007, 0.003, 0.0004, 0.004, 0.0004) )#
+Cross_data$count<-round(Cross_data$value*247)#
+num<-seq(1:length(Cross_data[,1]))#
+for (i in 1:length(Cross_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Cross_data$mids[i], times= Cross_data$count[i]))#
+}#
+x_Cross<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10)#
+# Data from Drewe et al. 2010#
+################################
+# Grooming out-degree #
+Drewe_g_data<-data.frame(mids=seq(5,65,10), count=c(44, 16,5,4,3,0,2))#
+num<-seq(1:length(Drewe_g_data[,1]))#
+for (i in 1:length(Drewe_g_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Drewe_g_data$mids[i], times=Drewe_g_data$count[i])	)#
+}#
+#put values into one vector so each size bin is represented count times.  #
+x_Drewe_g<- c(k1, k2, k3, k4, k5, k6, k7)#
+#
+# Aggression in-degree: #
+Drewe_a_data<-data.frame(mids=seq(5,185,10), count=c(53,12, 3,2,0,2,0,0,0,0,    0,0,0,0,0,0,1,0,1 ))#
+num<-seq(1:length(Drewe_a_data[,1]))#
+for (i in 1:length(Drewe_a_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Drewe_a_data$mids[i], times=Drewe_a_data$count[i])	)#
+}#
+x_Drewe_a<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19)#
+#
+# check#
+#hist(x_Drewe_a, breaks=length(Drewe_a_data[,1]))#
+#points(y=Drewe_a_data$count, x=Drewe_a_data$mids, pch=1)#
+#
+#hist(x_Drewe_g, breaks=length(Drewe_g_data[,1]), probability=TRUE)#
+#xval<-seq(0,70, 5)#
+#lines(xval, dexp(xval, rate=0.5), type="l", col="Purple")#
+#lines(xval, dexp(xval, rate=0.1), type="l", col="Blue")#
+#lines(xval, dexp(xval, rate=1), type="l", col="Green")#
+# Data from Haemede et al. 2009#
+################################
+Haemede_mating_data<-data.frame(mids=seq(1,31,2), count=c(0,3,0,1,2,5,4,3,3,3,1,1,0,0,0,1))#
+num<-seq(1:length(Haemede_mating_data[,1]))#
+for (i in 1:length(Haemede_mating_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Haemede_mating_data$mids[i], times= Haemede_mating_data$count[i])	)#
+}#
+x_Haemede_mating<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16)#
+#
+Haemede_nonmating_data<-data.frame(mids=seq(1,23,2), count=c(0,0,2,7,3,3,4,4,1,2,1,0))#
+num<-seq(1:length(Haemede_nonmating_data[,1]))#
+for (i in 1:length(Haemede_nonmating_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Haemede_nonmating_data$mids[i], times= Haemede_nonmating_data$count[i])	)#
+}#
+x_Haemede_nonmating<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12)#
+#
+# Data from Henkel et al. 2010#
+################################
+x_Henkel_spring<- c(9, 2, 7, 8, 12, 3, 1, 7, 1, 1, 1, 5)#
+x_Henkel_autumn<-c(2, 2, 1, 3, 3, 5, 1, 2, 1, 1, 1, 3)#
+#
+# Data from Hilton et al. 2010#
+################################
+Hilton_courtship_data<-data.frame(mids=seq(0, 25, 1), count=c(1,8,1,8,2,5,1,4,0,1,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,1))#
+Hilton_courtship_data<-Hilton_courtship_data[-1,]#
+Hilton_pair_data<-data.frame(mids=seq(1, 33, 1), count=c(0,3,2,1,2,1,3,1,2,1,3,0,0,1,2,3,2,1,0,0,0,1,1,0,0,0,1,0,0,1,1,0,1))#
+#
+num<-seq(1:length(Hilton_courtship_data[,1]))#
+for (i in 1:length(Hilton_courtship_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Hilton_courtship_data$mids[i], times= Hilton_courtship_data$count[i])	)#
+}#
+x_Hilton_court<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20, k21, k22, k23, k24, k25)  # 26 removed because one zero removed#
+#
+num<-seq(1:length(Hilton_pair_data[,1]))#
+for (i in 1:length(Hilton_pair_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Hilton_pair_data$mids[i], times= Hilton_pair_data$count[i])	)#
+}#
+x_Hilton_pair<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20, k21, k22, k23, k24, k25, k26, k27, k28, k29, k30, k31, k32, k33)#
+#
+# Data from Nung et al. 2008#
+################################
+Naug_SIP<-data.frame(mids=c(seq(5,100,5),250), value=c(0.121, 0.108, 0.216, 0.045, 0.052, 0.033, 0.034, 0.027, 0.014, 0.014, 0.015, 0.015, 0, 0.008, 0, 0.008, 0.014, 0, 0, 0.008, 0.053 ), count=NA)   # here in proportions#
+Naug_LIP<-data.frame(mids=c(seq(5,100,5),350), value=c(0.164, 0.191, 0.128, 0.077, 0.052, 0.058, 0.065, 0.021, 0.059, 0.021, 0.026, 0.021, 0, 0.014, 0.002, 0.014, 0.014, 0.008, 0, 0.021, 0.07 ), count=NA)#
+#mean degree is 29 for SIP and 35 for LIP so got counts by multiiplying #
+Naug_SIP$count=round(Naug_SIP$value*120)#
+Naug_LIP$count=round(Naug_LIP$value*158)#
+Naug_SIP<-Naug_SIP[1:20,]  # remove foragers#
+Naug_LIP<-Naug_LIP[1:20,]  # remove foragers#
+#
+num<-seq(1:length(Naug_SIP[,1]))#
+for (i in 1:length(Naug_SIP[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Naug_SIP$mids[i], times= Naug_SIP$count[i])	)#
+}#
+x_Naug_SIP <- c(k1, k2, k3, k4, k5, k6,k7, k8, k9, k10, k11, k12, k14, k16, k17, k20)#
+#
+num<-seq(1:length(Naug_LIP[,1]))#
+for (i in 1:length(Naug_LIP[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Naug_LIP$mids[i], times= Naug_LIP$count[i])	)#
+}#
+x_Naug_LIP<- c(k1, k2, k3, k4, k5, k6,k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20)#
+# Data from Porphyre et al. 2009#
+################################
+Porphyre_data<-data.frame(mids=seq(2, 127, 5), value=c(0.01719, 0.0311, 0.0238, 0.02521, 0.02861, 0.02035, 0.00811, 0.01473, 0.01391, 0.00252, 0.00164, 0.00164, 0.00394, 0.00083, 0.00171, 0.00022, 0.00242, 0.00013, 0,0, 0.00082, 0.00015, 0,0,0, 0.00083))  # bin size is 5... so probabilites sum to 1/5, 20%.  The mean degree was 20; N=269 with 2 individuals with no contacts... range was 0-93.  #
+#
+#mean degree is 20 so got counts by multiiplying #
+Porphyre_data$countnotroud= Porphyre_data$value*269*5#
+Porphyre_data$count=round(Porphyre_data$value*269*5)   # 269 gives a mean degree of 30#
+#want the sum of Porphyre_data$count to give you 269 #
+#
+num<-seq(1:length(Porphyre_data[,1]))#
+for (i in 1:length(Porphyre_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Porphyre_data$mids[i], times= Porphyre_data$count[i])	)#
+}#
+x_Porphyre<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20, k21, k22, k23, k24, k25, k26)#
+#mean(x_Porphyre)  # gives a mean of 21.9.  IF we note that the first two individuals in this distribution should have a count of 0 instead of 2, that should give a mean degree of 21.8.  #
+#(sum(x_Porphyre)-4)/52#
+#
+# Data from Prange et al. 2011#
+################################
+#Prange_data_summer<-data.frame(mids=seq(0,15,1), freq=c(0.336, 0.650, 0.019, 0,0, 0,0,0,0,0,0,0,0,0,0,0.014))#
+#Prange_data_autum<- data.frame(mids=seq(1,2,1), freq=c(0.568, 0.433, 0.008))#
+#Prange_data_winter<-data.frame(mids=seq(1, 7, 1), freq=c(0.586, 0.335, 0.019, 0.018, 0.035, 0.019))#
+#Prange_data_spring<-data.frame(mids=seq(1, 10, 1), freq=c(0.505, 0.448, 0.011, 0.012, 0.013, 0.014, 0.011))#
+# Data from Rushmore et al. 2013#
+################################
+## 9 mo aggregations (party and individual scale)#
+Rushmore_party_9m_data<-data.frame(orig_mids=seq(0.5, 20.5, 1), count=c(45,4,6,14,10,26,20,26,12,23,20,26, 18, 21,9,13,5,7,7,20,1) )#
+Rushmore_party_9m_data$mids<-(Rushmore_party_9m_data$orig_mids)-0.5#
+Rushmore_party_9m_data<-Rushmore_party_9m_data[-1,]#
+num<-seq(1:length(Rushmore_party_9m_data[,1]))#
+for (i in 1:length(Rushmore_party_9m_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Rushmore_party_9m_data$mids[i], times= Rushmore_party_9m_data$count[i])	)#
+}#
+x_r_party9m<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20)   # took off 21 because shortened#
+#
+Rushmore_indiv_9m_data<-data.frame(orig_mids=seq(0.1, 4.3, 0.2), count=c(60,15,14,16,19,13,23,22,18,24,17,24,18,18,8,9,7,3,3,0,1,1 ) )#
+Rushmore_indiv_9m_data$mids<-10*(Rushmore_indiv_9m_data$orig_mids)#
+Rushmore_indiv_9m_data<-Rushmore_indiv_9m_data[-1,]#
+num<-seq(1:length(Rushmore_indiv_9m_data[,1]))#
+for (i in 1:length(Rushmore_indiv_9m_data[,1])){#
+	assign(paste("k", num[i], sep=""), rep(Rushmore_indiv_9m_data$mids[i], times= Rushmore_indiv_9m_data$count[i])	)#
+}#
+x_r_indiv9m<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20, k21)  # took off 22 because shortened. #
+#
+# not included in final#
+## 1 mo aggregations (party and individual scale- 2 months chosen, representing the largest and smallest mean degree)#
+#Rushmore_party_1m_data<-data.frame(mids=seq(1.25,21.25, 2.5), countSM=c(4,10,20,3,0,0,0,0,0), countLG=c(4,1,0,1,0,6,4,20,1))#
+#num<-seq(1:length(Rushmore_party_1m_data[,1]))#
+#for (i in 1:length(Rushmore_party_1m_data[,1])){#
+#	assign(paste("k", num[i], sep=""), rep(Rushmore_party_1m_data$mids[i], times= Rushmore_party_1m_data$countSM[i]))#
+#	assign(paste("lg", num[i], sep=""), rep(Rushmore_party_1m_data$mids[i], times= Rushmore_party_1m_data$countLG[i]))#
+#}#
+#x_r_party1mSM<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9)#
+#x_r_party1mLG<- c(lg1, lg2, lg3, lg4, lg5, lg6, lg7, lg8, lg9)#
+#Rushmore_indiv_1m_data<-data.frame(mids=seq(0.25,4.75, 0.5), countSM=c(14,7, 10, 4,2,0,0,0,0,0), countLG=c(6,4,1,3,7,6,5,3,2,0))#
+#num<-seq(1:length(Rushmore_indiv_1m_data[,1]))#
+#for (i in 1:length(Rushmore_indiv_1m_data[,1])){#
+#	assign(paste("k", num[i], sep=""), rep(Rushmore_indiv_1m_data$mids[i], times= Rushmore_indiv_1m_data$countSM[i]))#
+#	assign(paste("lg", num[i], sep=""), rep(Rushmore_indiv_1m_data$mids[i], times= Rushmore_indiv_1m_data$countLG[i]))#
+#}#
+#x_r_indiv1mSM<- c(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10)#
+#x_r_indiv1mLG<- c(lg1, lg2, lg3, lg4, lg5, lg6, lg7, lg8, lg9, lg10)#
+#
+# check#
+#hist(x_r_party9m, breaks=length(Rushmore_party_9m_data[,1]))#
+#points(y=Rushmore_party_9m_data$count, x= Rushmore_party_9m_data$mids+1, pch=1)#
+###############################################################
+###############################################################
+ # FIT DATA#
+###############################################################
+###############################################################
+source('~/Documents/post-doc/general network literature/code/functions/fit_theorydistributions_to_degreedistributions_withbeta.R', chdir = TRUE)#
+source('~/Documents/post-doc/general network literature/code/functions/fit_theorydistributions_to_degreedistributions.R', chdir = TRUE)#
+#
+fitdata_nonb(x_Abel_all)#
+fitdata_nonb(x_Aiello_pre)   # too small; not sure if ok. #
+fitdata_nonb(x_Aiello_pre2)   # too small; not sure if ok. #
+fitdata(x_Carne_O)#
+fitdata(x_Carne_C)#
+fitdata(x_Clay)#
+fitdata(x_Cross)#
+fitdata(x_Drewe_g)#
+fitdata_nonb(x_Drewe_a)#
+fitdata_nonb(x_Haemede_mating)#
+fitdata(x_Haemede_nonmating)#
+fitdata(x_Henkel_spring)#
+fitdata(x_Henkel_autumn)#
+fitdata(x_Hilton_court)#
+fitdata(x_Hilton_pair)#
+fitdata_nonb(x_Naug_SIP)#
+fitdata(x_Naug_LIP)#
+fitdata(x_Porphyre)#
+fitdata(x_r_indiv9m)#
+fitdata(x_r_party9m)#
+#fitdata(x_Ancilloto_pc)   # cut from study, experimental#
+#fitdata(x_Ancilloto_all)
+log(1.5)
+exp(1.5)
+exp(3)
+exp(4.5)
+exp(6)
+exp(7.5)
+exp(0)
