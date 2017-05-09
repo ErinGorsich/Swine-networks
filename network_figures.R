@@ -18,62 +18,79 @@ library(sp)
 #############################################
 # Figure 1: Histogram of shipment size, overall
 #############################################
- ###############################################
-  # read in data
-    setwd("~/Documents/post-doc/Swine")
-  # Read in data
-  data.cvi<-read.csv("Swine_cvi_final.csv")
-  data.cvi= data.cvi[!is.na(data.cvi$NUM_SWINE),]  #-1
-  data.cvi=data.cvi[data.cvi$NUM_SWINE>0,] # -13
-  data.cvi=data.cvi[!is.na(data.cvi$SAMPLE_YEAR2),]  #-38 
-  data.cvi=data.cvi[data.cvi$NUM_SWINE>0,]
-  summary(data.cvi)
-  colnames(data.cvi)
-  # make a new column of all ones that represents the number of shipments
-  data.cvi$MOVE <-1
-  data.cvi<-data.cvi[, c("STATE", "SAMPLE_YEAR2", "PURPOSE", "NUM_SWINE", "NUM_BOAR", 
-               "NUM_BARROW", "NUM_GILT", "NUM_SOW", "NUM_AGE_0.2_MONTHS", 
-               "NUM_AGE_2.6_MONTHS", "NUM_AGE_6._MONTHS", "NUM_MALE", "NUM_FEMALE",
-               "D_STATE", "D_FIPS_X", "D_FIPS_Y",  "O_FIPS_X", "O_FIPS_Y", "O_STATE", 
-               "D_FIPS", "O_FIPS", "O_ST_FIPS", "D_ST_FIPS", "move" )]
-    
-  data.cvi <-data.cvi[!is.na(data.cvi$O_FIPS),]
-  data.cvi <-data.cvi[!is.na(data.cvi$D_FIPS),]
+###############################################
+# read in data
+setwd("~/Documents/post-doc/Swine")
+# Read in data
+data.cvi <- read.csv("Swine_cvi_final.csv")
+data.cvi = data.cvi[!is.na(data.cvi$NUM_SWINE),]  #-1
+data.cvi = data.cvi[data.cvi$NUM_SWINE > 0,] # -13
+data.cvi = data.cvi[!is.na(data.cvi$SAMPLE_YEAR2),]  #-38 
+data.cvi = data.cvi[data.cvi$NUM_SWINE > 0,]
+summary(data.cvi)
+colnames(data.cvi)
+
+# make a new column of all ones that represents the number of shipments
+data.cvi$MOVE <- 1
+
+# subset datasheet
+data.cvi <- data.cvi[, c("STATE", "SAMPLE_YEAR2", 
+	"PURPOSE", "NUM_SWINE", "NUM_BOAR", 
+    "NUM_BARROW", "NUM_GILT", "NUM_SOW", 
+    "NUM_AGE_0.2_MONTHS", "NUM_AGE_2.6_MONTHS",
+    "NUM_AGE_6._MONTHS", "NUM_MALE", "NUM_FEMALE",
+    "D_STATE", "D_FIPS_X", "D_FIPS_Y",  
+    "O_FIPS_X", "O_FIPS_Y", "O_STATE", 
+    "D_FIPS", "O_FIPS", "O_ST_FIPS", "D_ST_FIPS", "move" )]
+
+# remove NAs    
+data.cvi <- data.cvi[!is.na(data.cvi$O_FIPS),]
+data.cvi <- data.cvi[!is.na(data.cvi$D_FIPS),]
  
- # Subset cvi data by year.
- data10<-data.cvi[data.cvi$SAMPLE_YEAR2=="2010",]
- data11<-data.cvi[data.cvi$SAMPLE_YEAR2=="2011",]
-  data.cvi$MOVE<-1
-  data10$MOVE<-1
-  data11$MOVE<-1
+# Subset cvi data by year.
+data10 <- data.cvi[data.cvi$SAMPLE_YEAR2=="2010",]
+data11 <- data.cvi[data.cvi$SAMPLE_YEAR2=="2011",]
+data.cvi$MOVE <- 1
+data10$MOVE <- 1
+data11$MOVE <- 1
 
 # make data.cvi without Nebraska
-data2011red<-data11[data11$O_STATE!="NE",]
-data<- rbind(data10, data11)
+data2011red <- data11[data11$O_STATE != "NE",]
+data <- rbind(data10, data11)
 
 # Subset the data, naming it something you like...
-alldata<-data$NUM_SWINE
+alldata <- data$NUM_SWINE
 
 # this function makes the histogram, and saves it to your working directory
 my.histogram.maker<-function(data, filename){
-  swine.hist =  hist(data, plot=FALSE) 
-  tiff(paste(filename, ".tiff", sep=""), width=9, height=7, units="in", res=600)
-  par(mar=c(6,6,4,2))
-  max.x = max(swine.hist$breaks)
-  max.y = max(swine.hist$counts)
-  barplot(swine.hist$counts, width=1, space=0, main=NULL, xlab="", ylim=c(0,max.y+10), ylab="", cex.lab=1.5, cex.axis=1.4, bty="n", col="darkseagreen", las=1)  # cex was 1.4 with default settings
-  mtext("Number of shipments", side=2, line=4.4, cex=1.6) 
-  mtext("Number of swine", side=1, line=3, cex=1.6) 
-  axis(side=1, at=seq(1, (length(swine.hist$breaks)-1)), labels=swine.hist$breaks[-1], cex=1.5)
+  	swine.hist =  hist(data, plot=FALSE) 
+	tiff(paste(filename, ".tiff", sep=""), 
+		width=9, height=7, units="in", res=600)
+	par(mar=c(6,6,4,2))
+  	max.x = max(swine.hist$breaks)
+  	max.y = max(swine.hist$counts)
+  	barplot(swine.hist$counts, width = 1, space = 0, main = NULL, 
+  		xlab="", ylim=c(0,max.y+10), ylab="", cex.lab = 1.5, 
+  		cex.axis = 1.4, bty = "n", col = "darkseagreen", las = 1)
+  	mtext("Number of shipments", side = 2, line = 4.4, cex = 1.6) 
+	mtext("Number of swine", side = 1, line = 3, cex = 1.6) 
+  	axis(side = 1, at = seq(1, (length(swine.hist$breaks)-1)), 
+  		labels = swine.hist$breaks[-1], cex = 1.5)
   
-  # this part of the function plots the inset figure: 
-  swine.hist100= hist(data[data<100], breaks=seq(0,100, 10), plot=FALSE)
-  par(fig= c(0.45, 0.95, 0.45, 0.95), new=T, mar=c(3,2,1.5, 1), lwd=1, mgp=c(1, 0.25, 0))
-  max.x100 = max(swine.hist100$breaks)
-  max.y100 = max(swine.hist100$counts)
-  barplot(swine.hist100$counts, width=1, space=0, main=NULL, xlab="", ylim=c(0, max.y100+10), cex.lab=1.3, cex.axis=1.2, bty="n", col="darkslateblue", las=1, tcl=-0.2)
-  axis(side=1, at=seq(1, (length(swine.hist100$breaks)-1)), labels=swine.hist100$breaks[-1], cex.lab= 1.2, tcl=-0.2)
-  dev.off()
+  	# this part of the function plots the inset figure: 
+  	swine.hist100 = hist(data[data < 100], 
+  		breaks = seq(0, 100, 10), plot=FALSE)
+	par(fig = c(0.45, 0.95, 0.45, 0.95), new = T, 
+		mar = c(3, 2, 1.5, 1), lwd = 1, mgp = c(1, 0.25, 0))
+  	max.x100 = max(swine.hist100$breaks)
+  	max.y100 = max(swine.hist100$counts)
+  	barplot(swine.hist100$counts, width = 1, space = 0, main = NULL, 
+  		xlab = "", ylim = c(0, max.y100 + 10), 
+  		cex.lab = 1.3, cex.axis = 1.2, bty = "n", 
+  		col = "darkslateblue", las = 1, tcl = -0.2)
+  	axis(side = 1, at = seq(1, (length(swine.hist100$breaks)-1)),
+  		labels = swine.hist100$breaks[-1], cex.lab = 1.2, tcl = -0.2)
+  	dev.off()
 }
 
 my.histogram.maker(alldata, "Figure1")
@@ -126,12 +143,13 @@ tapply(data$NUM_SOW, data$SAMPLE_YEAR2, sum)
 # 498  237 
 
 # see summarystats fig 1,2,&3 for wrongness evaluation
-data$totalsex<-data$NUM_MALE+data$NUM_FEMALE+ data$NUM_FEMALE2+data$NUM_MALE2
-data$wrongness<-data$NUM_SWINE-data$totalsex
+data$totalsex <- data$NUM_MALE + data$NUM_FEMALE +
+	data$NUM_FEMALE2 + data$NUM_MALE2
+data$wrongness <- data$NUM_SWINE - data$totalsex
 # still many missing
-data$totalfem<-data$NUM_FEMALE+data$NUM_FEMALE2
+data$totalfem <- data$NUM_FEMALE + data$NUM_FEMALE2
 tapply(data$totalfem, data$SAMPLE_YEAR2, sum)
-data$totalmale<-data$NUM_MALE+data$NUM_MALE2
+data$totalmale <- data$NUM_MALE + data$NUM_MALE2
 tapply(data$totalmale, data$SAMPLE_YEAR2, sum)
 #female
 # 2010  2011 
@@ -146,18 +164,23 @@ tapply(data$totalmale, data$SAMPLE_YEAR2, sum)
 ###############################################
 ###############################################
 # Read in GWCC, GSCC identity. 
-node.stats<-read.csv("~/Documents/post-doc/Swine/node_stats_2010.csv")
-node.stats2011<-read.csv("~/Documents/post-doc/Swine/node_stats_2011all.csv")
-node.stats2011none<-read.csv("~/Documents/post-doc/Swine/node_stats_2011noNE.csv")
+node.stats <- read.csv("~/Documents/post-doc/Swine/node_stats_2010.csv")
+node.stats2011 <- read.csv("~/Documents/post-doc/Swine/node_stats_2011all.csv")
+node.stats2011none <- read.csv("~/Documents/post-doc/Swine/node_stats_2011noNE.csv")
 
 data(county.fips)
-node.stats$COUNTY_NAME_R<-county.fips$polyname[match(node.stats$NodeID, county.fips$fips)]
-node.stats2011$COUNTY_NAME_R<-county.fips$polyname[match(node.stats2011$NodeID, county.fips$fips)]
-node.stats2011none$COUNTY_NAME_R<-county.fips$polyname[match(node.stats2011none$NodeID, county.fips$fips)]
+node.stats$COUNTY_NAME_R <- county.fips$polyname[
+	match(node.stats$NodeID, county.fips$fips)]
+node.stats2011$COUNTY_NAME_R <- county.fips$polyname[
+	match(node.stats2011$NodeID, county.fips$fips)]
+node.stats2011none$COUNTY_NAME_R <- county.fips$polyname[
+	match(node.stats2011none$NodeID, county.fips$fips)]
 
-ctname<-map('county', resolution=0, plot=FALSE)$names
-ctname<-as.matrix(ctname)
-name<-data.frame(ctname=ctname, GSCC2010=NA, GWCC2010=NA, GSCC2011=NA, GWCC2011=NA, GSCC2011none=NA, GWCC2011none=NA)
+ctname <- map('county', resolution=0, plot=FALSE)$names
+ctname <- as.matrix(ctname)
+name <- data.frame(ctname = ctname, GSCC2010 = NA, 
+	GWCC2010 = NA, GSCC2011 = NA, GWCC2011 = NA, 
+	GSCC2011none = NA, GWCC2011none = NA)
 # not necessary #######
 name$GSCC2010 <-node.stats$StrongClusters[match(name$ctname, node.stats$COUNTY_NAME_R)]
 name$GWCC2010<-node.stats$WeakClusters[match(name$ctname, node.stats$COUNTY_NAME_R)]
