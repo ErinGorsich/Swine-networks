@@ -41,7 +41,7 @@ data.cvi <- data.cvi[, c("STATE", "SAMPLE_YEAR2",
     "NUM_AGE_6._MONTHS", "NUM_MALE", "NUM_FEMALE",
     "D_STATE", "D_FIPS_X", "D_FIPS_Y",  
     "O_FIPS_X", "O_FIPS_Y", "O_STATE", 
-    "D_FIPS", "O_FIPS", "O_ST_FIPS", "D_ST_FIPS", "move" )]
+    "D_FIPS", "O_FIPS", "O_ST_FIPS", "D_ST_FIPS", "MOVE" )]
 
 # remove NAs    
 data.cvi <- data.cvi[!is.na(data.cvi$O_FIPS),]
