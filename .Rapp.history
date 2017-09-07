@@ -1,116 +1,3 @@
-head(inv_p2)
-inv_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_feeder_hogs_JUSTUSETOTAL.csv")
-summary(inv_f)
-head(inv_f)
-tail(inv_f)
-inv_b<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_breeding_hogs_2DOMAINS!.csv")
-summary(inv_b)
-op<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_Inventory.csv")#
-op_p<-read.csv("~/Documents/post-doc/Swine/NASS/2012_NASS_HOGS_Operations_with_production.csv")#
-op_b<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_wtih_breeding_inventory.csv")#
-op_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_with_farrowtofeeder_inventory.csv")
-summary(op)
-op2<-get_useful_parts(op)
-head(op2)
-summary(op_p)
-op_p2<-get_useful_parts(op_p)
-summary(op_b)
-summary(op_b[op_b$Geo.Level=="COUNTY",])
-op_b<-op_b[op_b$Year=="2012" & op_b$Domain=="TOTAL",]
-summary(op_b)
-op_b2<-get_useful_parts(op_b)
-op_f<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Operations_with_farrowtofeeder_inventory.csv")
-summary(op_f)
-ns2010<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2010.csv")#
-ns2011<-read.csv("~/Documents/post-doc/Swine/node_stats_sub2011all.csv")
-summary(ns2010)
-head(inv2)
-ns2010$inv<-inv2$value[match(inv2$FIPS, ns2010$NodeID)]#
-ns2010$inv_p<-inv_p2$value[match(inv_p2$FIPS, ns2010$NodeID)]#
-ns2010$op<-op2$value[match(op2$FIPS, ns2010$NodeID)]#
-ns2010$op_p<- op_p2$value[match(op_p2$FIPS, ns2010$NodeID)]#
-ns2010$op_b<-op_b2$value[match(op_b2$FIPS, ns2010$NodeID)]
-ns2010$inv<-inv2$value[match(ns2010$NodeID, inv2$FIPS)]
-ns2010$inv<-inv2$value[match(ns2010$NodeID, inv2$FIPS)]#
-ns2010$inv_p<-inv_p2$value[match(ns2010$NodeID, inv_p2$FIPS)]#
-ns2010$op<-op2$value[match(ns2010$NodeID, op2$FIPS)]#
-ns2010$op_p<- op_p2$value[match(ns2010$NodeID, op_p2$FIPS)]#
-ns2010$op_b<-op_b2$value[match(ns2010$NodeID, op_b2$FIPS)]
-summary(ns2010)
-colnames(ns2010)
-net<-ns2010[,c(4,5,7,8,13)]#
-nass<-ns2010[,c(20:24)]
-head(nass)
-head(net)
-?corr
-??cor
-?cor
-cor(net[,1], nass[,1], na.rm=TRUE)
-cor(net[,1], nass[,1], method="pearson")
-?cor.test
-cor.test(net[,1], nass[,1], method="pearson")
-a<-cor.test(net[,1], nass[,1], method="pearson")
-str(a)
-a$conf.int[1]
-a$conf.int[2]
-window <- 5#
-ng <- 15 #or ncol(g)#
-xy <- data.frame(first = pmax( (1:ng) - window, 1 ), #
-                  last = pmin( (1:ng) + window, ng) )
-xy
-results <- list()#
-for(i in 1:nrow(xy)) {#
-  results[[i]] <- xy$first[i] : xy$last[i]#
-}#
-results
-get_corr<-function(netval, nassval){#
-	temp<-cor.test(netval, nassval, method=pearson)#
-	return(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value)#
-}
-get_corr(net[,1], nass[,1])
-results<-list(NA)#
-get_corr<-function(netval, nassval){#
-	temp<-cor.test(netval, nassval)  # method="pearson" as default#
-	return(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value)#
-}
-get_corr(net[,1], nass[,1])
-get_corr<-function(netval, nassval){#
-	temp<-cor.test(netval, nassval)  # method="pearson" as default#
-	results<-c(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value)#
-	return(results) 	#
-}
-?lapply
-?sapply
-?apply
-?lapply
-?mapply
-listA <- list(matrix(rnorm(2000), nrow=10),#
-              matrix(rnorm(2000), nrow=10))#
-listB <- list(matrix(rnorm(2000), nrow=10),#
-              matrix(rnorm(2000), nrow=10))#
-mapply(function(X,Y) {#
-  sapply(1:10, function(row) cor(X[row,], Y[row,]))#
-  }, X=listA, Y=listB)
-?sapply
-net<-ns2010[,c(4,5,7,8,13)]#
-nass<-ns2010[,c(20:24)]#
-# want cor.test over each column#
-cor.test(net[,1], nass[,1], method="pearson")#
-out<-list(NA)#
-#
-get_corr<-function(netval, nassval){#
-	temp<-cor.test(netval, nassval)  # method="pearson" as default#
-	results<-c(temp$estimate, temp$conf.int[1], temp$conf.int[2], temp$p.value)#
-	return(results) 	#
-}#
-#
-for (i in 1:length(net)){#
-	for (j in 1:length(nass)){#
-		out[[i]]<-get_corr(netval=net[,i], nassval=nass[,j])#
-	}#
-}
-out
-cor.test(net[,1], nass[,1], method="pearson")
 head(net)
 head(nass)
 lnet<-5 #
@@ -1395,3 +1282,118 @@ exp(4.5)
 exp(6)
 exp(7.5)
 exp(0)
+income <- read.csv("~/Downloads/AE74EBD5-4C4E-32CC-8D3D-5B0A45B1843C.csv")
+head(income)
+source('~/GitHub/Swine-networks/clean_NASS_data.R', chdir = TRUE)
+##############################################
+##############################################
+# This script merges data taken from NASS with county information. #
+##############################################
+##############################################
+#
+###################
+## functions used#
+newcol<-NA#
+standardize<-function(column){#
+	for (i in 1:length(column)){#
+	newcol[i]<-(column[i]-mean(column))/sd(column)#
+}#
+	return(newcol)#
+}#
+#
+newdataframe<-NA#
+get_useful_parts<-function(dataframe){#
+	###########################
+	### This function takes a dataframe.  It#
+	#  1) extracts the useful columns (value, State/County ID/ Value),#
+	# 	2) makes a new column, valsd, containing standardized version of Value, 3) creates a new column,#
+	# FIPS= complete county ID that should match our datasets, and 4) returs a clean dataset.  #
+	### Ins/Outs#
+	# Input= dataframe directly downloaded from NASS#
+	# Name as output an INFORMATIVE name!!!!  I do not keep track of what things are what!#
+	###########################
+#
+	# Clean dataframe by removing NAs#
+	dataframe<-dataframe[dataframe$Geo.Level=="COUNTY",]#
+	dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  #
+	# Get rid of commas in the Value column, standardize the Value, put in new column, "valsd"#
+	dataframe$Value<-as.character(dataframe$Value)#
+	dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))#
+	dataframe<-dataframe[!is.na(dataframe$Value2),]  # repeat, some NAs not removed earlier#
+	dataframe$valsd<-standardize(dataframe$Value2)#
+	dataframe$FIPS<-NA#
+	# create FIPS column, that merges the StateID and column ID#
+	for (i in 1:length(dataframe[,1])){#
+		if (dataframe$County.ANSI[i]<10) {#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="00")#
+	}#
+	else if (dataframe$County.ANSI[i]<100 & dataframe$County.ANSI[i]>=10){#
+		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="0")#
+	}#
+	else {dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="")#
+		}	#
+	}#
+	# Subset and rename things so it is easier to work with#
+	newdataframe<- dataframe[,colnames(dataframe) %in% c("Year", "State.ANSI", "County.ANSI", "Value2", "valsd", "FIPS")]#
+	new= data.frame(FIPS= newdataframe$FIPS, year= newdataframe$Year, stateFIPS=newdataframe$State.ANSI, countyFIPS=newdataframe$County.ANSI, value=newdataframe$Value2, valuesd=newdataframe$valsd)#
+	return(new)#
+}
+get_useful_parts
+head(income)
+dataframe <- income
+dataframe<-dataframe[!is.na(dataframe$State),]
+length(dataframe[,1])
+table(dataframe$YEAR)
+table(dataframe$Year)
+dataframe$Value<-as.character(dataframe$Value)#
+dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))#
+dataframe<-dataframe[!is.na(dataframe$Value2),]  # repeat, some NAs not removed earlier#
+dataframe$valsd<-standardize(dataframe$Value2)
+summary(dataframe)
+tapply(dataframe$Value2, dataframe$Year, sum)
+df <- dataframe[dataframe$Year == "2016"]
+df <- dataframe[dataframe$Year == "2016",]
+df
+sum(df$Value2)
+sum(df$Value2[df$State %in% c("CALIFORNIA", "IOWA", "MINNESOTA", "NEBRASKA", "NORTH CAROLINA", "TEXAS", "NEW YORK", "WISCONSIN")])
+sum(df$Value2[df$State %in% c("CALIFORNIA", "IOWA", "MINNESOTA", "NEBRASKA", "NORTH CAROLINA", "TEXAS", "NEW YORK", "WISCONSIN")])/ sum(df$Value2)
+test <- read.csv("~/Documents/post-doc/Swine/node_stats_2011all.csv")
+head(test)
+summary(test$Betweenness)
+df <- test[test$betweenness >= quantile(test$Betweennes, c(0.9))]
+df <- test[test$betweenness >= quantile(test$Betweennes, c(0.9)),]
+df
+quantile(test$Betweennes, c(0.9))
+quantile(test$Betweennes, c(0.9))[[1]]
+df <- test[test$betweenness >= quantile(test$Betweennes, c(0.9))[[1]],]
+hist(test$Betweenness)
+head(df)
+df <- test[test$Betweenness >= quantile(test$Betweennes, c(0.9))[[1]],]
+head(df)
+table(df$StateID)
+hist(test$Betweenness[test$Betweenness > 0])
+quantile(test$Betweenness[test$Betweenness > 0], c(0.9))
+hist(test$Betweenness[test$Betweenness > 0])
+df <- test[test$Betweenness >= quantile(test$Betweennes[test$Betweenness >0], c(0.9))[[1]],]
+head(df)
+table(df$StateID)
+df <- test[test$Betweenness >= quantile(test$Betweennes, c(0.95))[[1]],]
+table(df$StateID)
+df <- test[test$Betweenness >= quantile(test$Betweennes, c(0.96))[[1]],]
+table(df$StateID)
+df <- test[test$Betweenness >= quantile(test$Betweennes[test$Betweenness >0], c(0.8))[[1]],]
+table(df$StateID)
+df <- test[test$Betweenness >= quantile(test$Betweennes, c(0.97))[[1]],]
+table(df$StateID)
+length(df[,1])
+df <- test[test$Betweenness >= quantile(test$Betweennes, c(0.98))[[1]],]
+length(df[,1])
+table(df$StateID)
+df <- test[test$Betweenness >= quantile(test$Betweennes, c(0.975))[[1]],]
+table(df$StateID)
+table(df$StateID)
+length(df[,1])
+df
+df <- test[test$Betweenness >= quantile(test$Betweennes, c(0.99))[[1]],]
+length(df[,1])
+df

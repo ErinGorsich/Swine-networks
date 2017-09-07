@@ -38,6 +38,8 @@ dat = read.csv("Swine_cvi_final.csv")
 dat = dat[!is.na(dat$NUM_SWINE),]  #-1
 dat = dat[dat$NUM_SWINE>0,] # -13
 dat = dat[!is.na(dat$SAMPLE_YEAR2),]  #-38 #Clay added new col for year
+dat = dat[!is.na(dat$O_FIPS),]
+dat = dat[!is.na(dat$D_FIPS),]
 dat = dat[dat$NUM_SWINE>0,]
 summary(dat)
 
@@ -70,8 +72,6 @@ datared2011= data2011[data2011$STATE!="NE",]
 #################################################
 # Step 3:  Make Networks, function to apply to each subset of the data 
 #################################################
-<<<<<<< HEAD
-
  makenetworks<-function(datared, filename){
 	#############################################
 	# Input: datared= dataset used to make network.  

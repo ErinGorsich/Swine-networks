@@ -1,8 +1,13 @@
-#############################################
-#############################################
-# Make figures and maps of US with swine CVI data
-#############################################
-#############################################
+####################################################################
+####################################################################
+####################################################################
+# Spatio-temporal patterns and characteristics of swine shipments in the U.S. 
+# based on Interstate Certificates of Veterinary Inspection
+# Code to make figures and maps of swine CVI data
+# Erin E. Gorsich
+####################################################################
+####################################################################
+####################################################################
 library(maps)
 library(igraph)
 library(plyr)
@@ -12,21 +17,21 @@ library(SDMTools)
 library(shape)
 library(sp)
 
-# NOTE TO SELF- WHEN REMAKE FINAL FIGURES, REMEMBER TO REMOVE WITHIN STATE SHIPMENTS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-###############################################
-#############################################
+####################################################################
+####################################################################
 # Figure 1: Histogram of shipment size, overall
-#############################################
-###############################################
+####################################################################
+####################################################################
 # read in data
 setwd("~/Documents/post-doc/Swine")
 # Read in data
 data.cvi <- read.csv("Swine_cvi_final.csv")
-data.cvi = data.cvi[!is.na(data.cvi$NUM_SWINE),]  #-1
-data.cvi = data.cvi[data.cvi$NUM_SWINE > 0,] # -13
-data.cvi = data.cvi[!is.na(data.cvi$SAMPLE_YEAR2),]  #-38 
-data.cvi = data.cvi[data.cvi$NUM_SWINE > 0,]
+data.cvi <- data.cvi[!is.na(data.cvi$NUM_SWINE), ]  #-1
+data.cvi <- data.cvi[data.cvi$NUM_SWINE > 0, ] # -13
+data.cvi <- data.cvi[!is.na(data.cvi$SAMPLE_YEAR2), ]  #-38 
+data.cvi <- data.cvi[!is.na(data.cvi $O_FIPS), ]
+data.cvi <- data.cvi[!is.na(data.cvi $D_FIPS), ]
+data.cvi <- data.cvi[data.cvi$NUM_SWINE > 0, ]
 summary(data.cvi)
 colnames(data.cvi)
 
@@ -53,15 +58,15 @@ data11 <- data.cvi[data.cvi$SAMPLE_YEAR2=="2011",]
 data.cvi$MOVE <- 1
 data10$MOVE <- 1
 data11$MOVE <- 1
+alldata <- data.cvi$NUM_SWINE
 
-# make data.cvi without Nebraska
-data2011red <- data11[data11$O_STATE != "NE",]
-data <- rbind(data10, data11)
+# make data = data.cvi without Nebraska
+data11red <- data11[data11$O_STATE != "NE",]
+data <- rbind(data10, data11red)  # new change
 
-# Subset the data, naming it something you like...
-alldata <- data$NUM_SWINE
 
-# this function makes the histogram, and saves it to your working directory
+# this function makes a histogram, and saves it to your working directory
+# used in exploratory analyses to look at different subsets of the data.
 my.histogram.maker<-function(data, filename){
   	swine.hist =  hist(data, plot=FALSE) 
 	tiff(paste(filename, ".tiff", sep=""), 
@@ -95,664 +100,165 @@ my.histogram.maker<-function(data, filename){
 
 my.histogram.maker(alldata, "Figure1")
 
-
-###############################################
-###############################################
+####################################################################
+####################################################################
 # Figure 2: Purpose/ Production type, made in prism
-###############################################
-###############################################
+####################################################################
+####################################################################
+table(data$PURPOSE)
+tapply(data$NUM_SWINE, data$PURPOSE, sum)
+
+table(data10$PURPOSE)
+table(data11$PURPOSE)
+table(data11$PURPOSE[data11$O_STATE != "NE"])
+# feeding
+sum(data10$MOVE[data10$PURPOSE %in% c("Feeding", "Feeding/Graing")])
+sum(data11$MOVE[data11$O_STATE != "NE" & data11$PURPOSE %in% c("Feeding", "Feeding/Graing")])
+# not specified
+sum(data10$MOVE[data10$PURPOSE %in% c("NOT SPECIFIED", "Other", "No Data", "Not Legible", "")])
+sum(data11$MOVE[data11$O_STATE != "NE" & data11$PURPOSE %in% c("NOT SPECIFIED", "Other", "No Data", "Not Legible", "")])
+
+# For figure A2 with NE data
 table(data.cvi$PURPOSE)
 tapply(data.cvi$NUM_SWINE, data.cvi$PURPOSE, sum)
 
-###############################################
-###############################################
+####################################################################
+####################################################################
 # Figure 3: Age and sex patterns, made in prism
-###############################################
-###############################################
-# calculate sum of number of swine by year
-tapply(data$NUM_MALE, data$SAMPLE_YEAR2, sum)
-# 2010  2011 
-#73096 14684 
-tapply(data$NUM_FEMALE, data$SAMPLE_YEAR2, sum)
-# 2010  2011 
-#30066 31925 
+####################################################################
+####################################################################
 
-# calculate sum of number of swine by year
+# AGE:  calculate sum of number of swine by year
+####################################################################
 tapply(data$NUM_AGE_0.2_MONTHS, data$SAMPLE_YEAR2, sum)
-# 2010  2011 
-#1182595 1340820  
 tapply(data$NUM_AGE_2.6_MONTHS, data$SAMPLE_YEAR2, sum)
-# 2010  2011 
-#312329 313963 
 tapply(data$NUM_AGE_6._MONTHS, data$SAMPLE_YEAR2, sum)
-# 2010  2011 
-#14050 21231 
+
+data$wrongness_age<-data$NUM_SWINE-(data$NUM_AGE_0.2_MONTHS+data$NUM_AGE_2.6_MONTHS+data$NUM_AGE_6._MONTHS)
+par(mfrow = c(1, 2))
+hist(data$wrongness_age)
+hist(data$wrongness_age[data$wrongness_age>50])
+ #total number of shipments- length(data[,1])
+ length(data[,1]) - length(data$wrongness_age[data$wrongness_age==0])  # 400 still off... = 6.9% wrong
+
+# SEX:  calculate sum of number of swine by year
+####################################################################
+tapply(data$NUM_MALE, data$SAMPLE_YEAR2, sum)
+tapply(data$NUM_FEMALE, data$SAMPLE_YEAR2, sum)
+
+# with Nebraska
+tapply(data.cvi$NUM_MALE, data.cvi$SAMPLE_YEAR2, sum)
+tapply(data.cvi$NUM_FEMALE, data.cvi$SAMPLE_YEAR2, sum)
 
 # calculates sum of number of gilt, boar, barrow ect. 
 tapply(data$NUM_BOAR, data$SAMPLE_YEAR2, sum)
-#2010 2011 
-# 301 2110 
 tapply(data$NUM_BARROW, data$SAMPLE_YEAR2, sum)
-#2010  2011 
-# 8358 15831 
 tapply(data$NUM_GILT, data$SAMPLE_YEAR2, sum)
-# 2010  2011 
-#57820 40374 
 tapply(data$NUM_SOW, data$SAMPLE_YEAR2, sum)
-#2010 2011 
-# 498  237 
 
-# see summarystats fig 1,2,&3 for wrongness evaluation
-data$totalsex <- data$NUM_MALE + data$NUM_FEMALE +
-	data$NUM_FEMALE2 + data$NUM_MALE2
-data$wrongness <- data$NUM_SWINE - data$totalsex
-# still many missing
-data$totalfem <- data$NUM_FEMALE + data$NUM_FEMALE2
+# there are 1659 rows with information on either NUM_MALE or NUM_FEMALE; when present, this is also mostly correct. 
+data$wrongness_sex<-data$NUM_SWINE-(data$NUM_MALE+data$NUM_FEMALE)
+
+# there are 1167 rows with information on either NUM_MALE2 or NUM_FEMALE2; when it is present, it matches NUM_SWINE
+data$NUM_MALE2<-data$NUM_BOAR+data$NUM_BARROW
+data$NUM_FEMALE2<-data$NUM_GILT+data$NUM_SOW
+data$wrongness_sex2<-data$NUM_SWINE-(data$NUM_MALE2+data$NUM_FEMALE2)
+par(mfrow = c(1,2))
+hist(data$wrongness_sex)
+hist(data$wrongness_sex2)
+
+# Decide if we can sum the two characterizations (e.g. people either fill out the male/female column or the boar/barrow ect column):
+data$totalsex<-data$NUM_MALE+data$NUM_FEMALE+ data$NUM_FEMALE2+data$NUM_MALE2
+data$wrongness<-data$NUM_SWINE-data$totalsex
+summary(data$wrongness)   # no non-negative numbers, so no duplicatess!
+
+data$totalfem<-data$NUM_FEMALE+data$NUM_FEMALE2
 tapply(data$totalfem, data$SAMPLE_YEAR2, sum)
-data$totalmale <- data$NUM_MALE + data$NUM_MALE2
+data$totalmale<-data$NUM_MALE+data$NUM_MALE2
 tapply(data$totalmale, data$SAMPLE_YEAR2, sum)
-#female
-# 2010  2011 
-#88384 72536 
-#male
-# 2010  2011 
-#81755 32625 
 
-###############################################
-###############################################
-# Figure S1: Plot of GSCC, GWCC at the county scale
-###############################################
-###############################################
-# Read in GWCC, GSCC identity. 
-node.stats <- read.csv("~/Documents/post-doc/Swine/node_stats_2010.csv")
-node.stats2011 <- read.csv("~/Documents/post-doc/Swine/node_stats_2011all.csv")
-node.stats2011none <- read.csv("~/Documents/post-doc/Swine/node_stats_2011noNE.csv")
-
-data(county.fips)
-node.stats$COUNTY_NAME_R <- county.fips$polyname[
-	match(node.stats$NodeID, county.fips$fips)]
-node.stats2011$COUNTY_NAME_R <- county.fips$polyname[
-	match(node.stats2011$NodeID, county.fips$fips)]
-node.stats2011none$COUNTY_NAME_R <- county.fips$polyname[
-	match(node.stats2011none$NodeID, county.fips$fips)]
-
-ctname <- map('county', resolution=0, plot=FALSE)$names
-ctname <- as.matrix(ctname)
-name <- data.frame(ctname = ctname, GSCC2010 = NA, 
-	GWCC2010 = NA, GSCC2011 = NA, GWCC2011 = NA, 
-	GSCC2011none = NA, GWCC2011none = NA)
-# not necessary #######
-name$GSCC2010 <-node.stats$StrongClusters[match(name$ctname, node.stats$COUNTY_NAME_R)]
-name$GWCC2010<-node.stats$WeakClusters[match(name$ctname, node.stats$COUNTY_NAME_R)]
-name$GSCC2010[is.na(name$GSCC2010)]<-0
-name$GWCC2010[is.na(name$GWCC2010)]<-0
-name$GSCC2011 <-node.stats2011$StrongClusters[match(
-	name$ctname, node.stats2011$COUNTY_NAME_R)]
-name$GWCC2011<-node.stats2011$WeakClusters[match(
-	name$ctname, node.stats2011$COUNTY_NAME_R)]
-name$GSCC2011[is.na(name$GSCC2011)]<-0
-name$GWCC2011[is.na(name$GWCC2011)]<-0
-name$GSCC2011none <-node.stats2011none$StrongClusters[match(
-	name$ctname, node.stats2011none$COUNTY_NAME_R)]
-name$GWCC2011none<-node.stats2011none$WeakClusters[match(
-	name$ctname, node.stats2011none$COUNTY_NAME_R)]
-name$GSCC2011none[is.na(name$GSCC2011none)]<-0
-name$GWCC2011none[is.na(name$GWCC2011none)]<-0
-############
-# note: 3 nodes did not transfer from node-stats to name. 
-
-# set up color, so not in either GSCC or GWCC is gray; 
-# no data=white; GSCC is light blue; GWCC is dark blue
-cols <- colorRampPalette(brewer.pal(9, "PuBu"))(7)   # colors for level plots
-colmatch<-data.frame(num=seq(0,7,1), col=c("white", cols))
-plot(1:8, 1:8, col= cols, pch=19, cex=2)   
-# want cols[7] for GSCC; cols[3] or 4 for weakly connected; cols[2] or light gray for nas. 
-
-Mode <- function(x) {
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
-# DEFINE COLORS FOR 2010
-clusters=matrix(0,nrow=length(ctname),ncol=2)
-ctname<-as.character(ctname)
-  for(i in 1:length(node.stats$NodeID)){
-    temp=which(county.fips$fips==node.stats$NodeID[i])
-    temp2=which(ctname== county.fips[temp,2])
-    clusters[temp2,1]=rep(node.stats[i,"StrongClusters"],length(temp2))
-    clusters[temp2,2]=rep(node.stats[i,"WeakClusters"],length(temp2))
-  }  
-  	clusters[clusters==0]=NA  # if no info cluster assigned, na= no data.   
-  	clusters.new=matrix(0,nrow=length(ctname),ncol=1)
-	clusters.new[clusters[,1]==as.numeric(Mode(na.exclude(clusters[,1])))]=cols[7]
-	clusters.new[(clusters[,1]!=as.numeric(Mode(na.exclude(clusters[,1]))) & clusters[,
-		2]==as.numeric(Mode(na.exclude(clusters[,2]))))]=cols[4]
-	clusters.new[(clusters[,1]!=as.numeric(Mode(na.exclude(clusters[,1]))) & clusters[,2]!=as.numeric(Mode(na.exclude(clusters[,2]))) & !is.na(clusters[,1]))]="lightskyblue1"
-	clusters.new[is.na(clusters[,1])]="gray93"
-
-name$color2010<-clusters.new
-
-# DEFINE COLORS FOR 2011, node.stats2011
-clusters=matrix(0,nrow=length(ctname),ncol=2)
-ctname<-as.character(ctname)
-  for(i in 1:length(node.stats2011$NodeID)){
-    temp=which(county.fips$fips== node.stats2011$NodeID[i])
-    temp2=which(ctname== county.fips[temp,2])
-    clusters[temp2,1]=rep(node.stats2011[i,"StrongClusters"],length(temp2))
-    clusters[temp2,2]=rep(node.stats2011[i,"WeakClusters"],length(temp2))
-  }    
-  	clusters[clusters==0]=NA  # if no info cluster assigned, na= no data.   
-  	clusters.new=matrix(0,nrow=length(ctname),ncol=1)
-	clusters.new[clusters[,1]==as.numeric(Mode(na.exclude(clusters[,1])))]=cols[7]
-	clusters.new[(clusters[,1]!=as.numeric(Mode(na.exclude(clusters[,1]))) & clusters[,
-		2]==as.numeric(Mode(na.exclude(clusters[,2]))))]=cols[4]
-	clusters.new[(clusters[,1]!=as.numeric(Mode(na.exclude(clusters[,1]))) & clusters[,2]!=as.numeric(Mode(na.exclude(clusters[,2]))) & !is.na(clusters[,1]))]="lightskyblue1"
-	clusters.new[is.na(clusters[,1])]="gray93"
-
-name$color2011<-clusters.new
-
-# DEFINE COLORS FOR 2011, node.stats2011
-clusters=matrix(0,nrow=length(ctname),ncol=2)
-ctname<-as.character(ctname)
-  for(i in 1:length(node.stats2011none$NodeID)){
-    temp=which(county.fips$fips== node.stats2011none$NodeID[i])
-    temp2=which(ctname== county.fips[temp,2])
-    clusters[temp2,1]=rep(node.stats2011none[i,"StrongClusters"],length(temp2))
-    clusters[temp2,2]=rep(node.stats2011none[i,"WeakClusters"],length(temp2))
-  }  
-  	clusters[clusters==0]=NA  # if no info cluster assigned, na= no data.   
-  	clusters.new=matrix(0,nrow=length(ctname),ncol=1)
-	clusters.new[clusters[,1]==as.numeric(Mode(na.exclude(clusters[,1])))]=cols[7]
-	clusters.new[(clusters[,1]!=as.numeric(Mode(na.exclude(clusters[,1]))) & clusters[,
-		2]==as.numeric(Mode(na.exclude(clusters[,2]))))]=cols[4]
-	clusters.new[(clusters[,1]!=as.numeric(Mode(na.exclude(clusters[,1]))) & clusters[,2]!=as.numeric(Mode(na.exclude(clusters[,2]))) & !is.na(clusters[,1]))]="lightskyblue1"
-	clusters.new[is.na(clusters[,1])]="gray93"
-
-name$color2011none<-clusters.new
-
-# 2010 map
-tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/GSCC&GWCC_2010.tiff",
-width = 140, height = 90, units = "mm", res=600, compression="lzw")
-par(mai=c(1,1,1,1))
-map('county', resolution=0, lwd=0.2, col="dark gray")
-map('county', resolution=0, fill=TRUE, col=name$color2010, boundary="light gray", lwd=0.2, add=TRUE)
-map('state', resolution=0, add=TRUE, fill=FALSE, lwd=0.5)
-map('state', region=c("Iowa", "Texas", "California", 
-    "Minnesota", "New York", "North Carolina", "Wisconsin"),
-    resolution=0, col="black", add=TRUE, lwd=1.5)
-dev.off()
-#2011all
-tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/GSCC&GWCC_2011.tiff",
-width = 140, height = 90, units = "mm", res=600, compression="lzw")
-par(mai=c(1,1,1,1))
-map('county', resolution=0, lwd=0.2, col="dark gray")
-map('county', resolution=0, fill=TRUE, col=name$color2011, boundary="light gray", lwd=0.2, add=TRUE)
-map('state', resolution=0, add=TRUE, fill=FALSE, lwd=0.5)
-map('state', region=c("Iowa", "Texas", "California", 
-    "Minnesota", "New York", "North Carolina", "Wisconsin", "Nebraska"),
-    resolution=0, col="black", add=TRUE, lwd=1.5)
-dev.off()
-#2011none
-tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/GSCC&GWCC_2011none.tiff",
-width = 140, height = 90, units = "mm", res=600, compression="lzw")
-par(mai=c(1,1,1,1))
-map('county', resolution=0, lwd=0.2, col="dark gray")
-map('county', resolution=0, fill=TRUE, col=name$color2011none, boundary="light gray", lwd=0.2, add=TRUE)
-map('state', resolution=0, add=TRUE, fill=FALSE, lwd=0.5)
-map('state', region=c("Iowa", "Texas", "California", 
-    "Minnesota", "New York", "North Carolina", "Wisconsin"),
-    resolution=0, col="black", add=TRUE, lwd=1.5)
-dev.off()
-
-# summary of GWCC and GSCC size
-length(node.stats$StrongClusters[node.stats$StrongClusters==395])/length(node.stats$StrongClusters)# 80/total
-length(node.stats2011$StrongClusters[node.stats2011$StrongClusters==473])/length(node.stats2011$StrongClusters) # 107/total= 13.19%
-length(node.stats$WeakClusters[node.stats$WeakClusters==2])/length(node.stats$WeakClusters)
-length(node.stats2011$WeakClusters[node.stats2011$WeakClusters==2])/length(node.stats2011$WeakClusters)
-# summary of GWCC and GSCC size in states with data
-datastates<-c(19, 6, 27, 31, 36, 37, 48, 55)
-datastatesnoNE<-c(19, 6, 27, 36, 37, 48, 55)
-node.stats2010sub<-node.stats[node.stats$StateID %in% datastatesnoNE,]
-node.stats2011sub<-node.stats2011[node.stats2011$StateID %in% datastates,]
-node.stats2011nonesub<-node.stats2011none[node.stats2011none$StateID %in% datastates,]
-
-length(node.stats2010sub$StrongClusters[node.stats2010sub$StrongClusters==395])/length(node.stats2010sub$StrongClusters)  # 80/total=24.09
-length(node.stats2011sub$StrongClusters[node.stats2011sub$StrongClusters== 473])/length(node.stats2011sub$StrongClusters)  # 26.81%
-length(node.stats2010sub$WeakClusters[node.stats2010sub$WeakClusters==2])/length(node.stats2010sub$WeakClusters)  # 0.9398
-length(node.stats2011sub$WeakClusters[node.stats2011sub$WeakClusters==2])/length(node.stats2011sub$WeakClusters)  #0.9423
-
-# ASSORTIVITY IN SUBSET: 
-test<-read.csv("node_stats_sub2011all.csv")
-test<-test[!is.na(test$AveNearNeighDeg),]
-cor(test$AveNearNeighDeg, test$Unweighted_TotalDegree) #0.12
-
-test<-read.csv("node_stats_sub2011noNE.csv")
-test<-test[!is.na(test$AveNearNeighDeg),]
-cor(test$AveNearNeighDeg, test$Unweighted_TotalDegree)  # 0.13
-
-test<-read.csv("node_stats_sub2010.csv")
-test<-test[!is.na(test$AveNearNeighDeg),]
-cor(test$AveNearNeighDeg, test$Unweighted_TotalDegree)
-
-# STATE ASSORTIVITY IN THE SUBSET
-st_node.stats2010<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2010.csv")
-st_node.stats2011<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011all.csv")
-st_node.stats2011none<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011noNE.csv")
-st_node.stats2010<-st_node.stats2010[st_node.stats2010$NodeID %in% datastatesnoNE,]
-st_node.stats2011<-st_node.stats2011[st_node.stats2011$NodeID %in% datastates,]
-st_node.stats2011none<-st_node.stats2011none[st_node.stats2011none$NodeID %in% datastatesnoNE,]
-
-
-###############################################
-###############################################
-# Figure 4: Flows map
-###############################################
-###############################################
-##########################
-# 2010
-##########################
-# add flows through state centroids
-data2010<-data10
-##make a vector of all pairs
-edge<-paste(as.character(data2010$O_ST_FIPS),as.character(data2010$D_ST_FIPS),sep='.u.')
-##make a vector of unique pairs
-edge1<-unique(paste(as.character(data2010$O_ST_FIPS),as.character(data2010$D_ST_FIPS),sep='.u.'))
-
-##censor the edges list if both vertices are the same
-for(i in 1:length(edge1)){
-  if(sum(paste(strsplit(edge1[i],'.u.')[[1]][2],strsplit(edge1[i],'.u.')[[1]][1],sep='.u.')==edge1)>0){
-		edge2<-edge1[-which(paste(strsplit(edge1[i],'.u.')[[1]][2],strsplit(edge1[i],'.u.')[[1]][1],sep='.u.')==edge1)]
-		}
-	}
-
-# HAVE NOT YET FIGURED OUT HOW TO REMOVE FORWARD AND REVERSE EDGES- IF 
-##censor the edges list if both vertices are the same
-#for(i in 1:length(edge2)){
-#	for (j in 1:length(edge1)){
-#  if(sum(paste(strsplit(edge2[i],'.u.')[[1]][2],strsplit(edge2[i],'.u.')[[1]][1],sep='.u.')== edge1[j], 
-#  	paste(strsplit(edge2[i],'.u.')[[1]][1],strsplit(edge2[i],'.u.')[[1]][2],sep='.u.')== edge1[j])>1){
-#		edge3<-edge2[-which(paste(strsplit(edge2[i],'.u.')[[1]][2],strsplit(edge2[i],'.u.')[[1]][1],sep='.u.')== edge2)]
-#		}
-#	}
-#	}
-	
-##censor the edges list if both vertices are the same but in reverse order
-
-##use the list of unique vertex pairs to tabulate their frequency
-edge2010<-data.frame(edge=as.character(edge2), node1=NA, node2=NA, unique=NA, N=0, swine=0)	
-	for (i in 1:length(edge2010[,1])){
-	edge2010$node1[i]=as.character(strsplit(as.character(edge2010$edge[i]), '.u.')[[1]][1])
-	edge2010$node2[i]=strsplit(as.character(edge2010$edge[i]), '.u.')[[1]][2]
-}
-
-temp<-NA
-for (i in 1:length(edge2010[,1])){
-	temp[i]<-sum(which(paste(edge2010$node2[i], edge2010$node1[i], sep='.u.')== as.character(edge2010$edge)))
-	ifelse(temp[i]==0, edge2010$unique[i]<-TRUE, edge2010$unique[i]<-FALSE)
-}
-data2010$NUM_SWINE<-as.numeric(data2010$NUM_SWINE)
-
-# SUM the total number of shipmetns between states; sums, both directions, change this to make for just out or in degree. 
-# NOTE: still have OSTATE.u.DSTATE and DSTATE.u.OSTATE when they are not unique, but they have the same values of N.
-for (i in 1: length(data2010[,1])){
-	for (j in 1:length(edge2010[,1])){
-		if (
-		paste(as.character(data2010$O_ST_FIPS[i]), 
-		as.character(data2010$D_ST_FIPS[i]),sep='.u.')==
-		as.character(edge2010$edge[j]) || paste(as.character(data2010$D_ST_FIPS[i]), 
-		as.character(data2010$O_ST_FIPS[i]),sep='.u.')== as.character(edge2010$edge[j]))
-		edge2010$N[j]<- edge2010$N[j]+1
-		edge2010$swine[j]<- edge2010$swine[j] + data2010$NUM_SWINE[i]		
-	}
-}	
-
-
-data(state.fips)
-# add latitude and longitude and plot
-matchdata<-read.csv("county_centroid_coordinates.csv")
-matchdata<-matchdata[!is.na(matchdata$FIPS),]
-matchdata$state2<-tolower(matchdata$state)
-#statecoords<-read.csv("state_latlon.csv") # funky coordinates, old
-statecoords<-read.table("~/Documents/post-doc/2010 Cattle Movement Practice/state_centroid_coordinates.txt", header=TRUE, sep=",")  # same projection
-# instead use values in the maps package
-
-library(ggplot2)
-getLabelPoint<-
-	function(state){Polygon(state[c('long', 'lat')])@labpt}
-df<-map_data('state')
-centroids<-by(df, df$region, getLabelPoint)             # returns list of labelpoints
-centroids<-do.call("rbind.data.frame", centroids)  # convert to a Data frame
-names(centroids) <-c('long', 'lat')	
-centroids$names<-rownames(centroids)
-
-# check: states washington, virginia, north carolina, new york, michigan are funky. 
-#map('state')
-#text(centroids$long, centroids$lat, rownames(centroids), offset=0, cex=0.4)
-centroids$lat[centroids$names=="washington"]<-statecoords$latitude[statecoords$state=="Washington"]
-#centroids$long[centroids$names=="washington"]<-statecoords$longitude[statecoords$state=="Washington"]	
-centroids$lat[centroids$names=="virginia"]<-statecoords$latitude[statecoords$state=="Virginia"]
-centroids$long[centroids$names=="virginia"]<-statecoords$longitude[statecoords$state=="Virginia"]	
-centroids$lat[centroids$names=="north carolina"]<-statecoords$latitude[statecoords$state=="North Carolina"]
-centroids$long[centroids$names=="north carolina"]<-statecoords$longitude[statecoords$state=="North Carolina"]	
-centroids$lat[centroids$names=="new york"]<-statecoords$latitude[statecoords$state=="New York"]
-centroids$long[centroids$names=="new york"]<-statecoords$longitude[statecoords$state=="New York"]	
-centroids$lat[centroids$names=="michigan"]<-statecoords$latitude[statecoords$state=="Michigan"]
-centroids$long[centroids$names=="michigan"]<-statecoords$longitude[statecoords$state=="Michigan"]	
-centroids$lat[centroids$names=="new york"]<-42.8
-centroids$lat[centroids$names=="massachusetts"]<-42.45
-map('state')
-text(centroids$long, centroids$lat, rownames(centroids), offset=0, cex=0.4)
-
-matchdata$Rlatitude<-centroids$lat[match(matchdata$state2, rownames(centroids))]
-matchdata$Rlongitude<-centroids$long[match(matchdata$state2, rownames(centroids))]
-
-edge2010$Olatitude<- matchdata$Rlatitude[match(edge2010$node1, matchdata$ST_FIPS)]
-edge2010$Dlatitude<- matchdata$Rlatitude[match(edge2010$node2, matchdata$ST_FIPS)]
-edge2010$Olongitude<- matchdata$Rlongitude[match(edge2010$node1, matchdata$ST_FIPS)]
-edge2010$Dlongitude<- matchdata$Rlongitude[match(edge2010$node2, matchdata$ST_FIPS)]
-edge2010<-edge2010[-113,]   # remove row 113, with a shipment from Cali to Hawaii...
-
-
-# get colors based on strong and weak components for map
-node.stats<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2010.csv")
-node.stats2011<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011all.csv")
-node.stats2011none<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011noNE.csv")
-
-node.stats$STATE_NAME_R<-state.fips$polyname[match(node.stats$NodeID, state.fips$fips)]
-node.stats2011$STATE_NAME_R<-state.fips$polyname[match(node.stats2011$NodeID, state.fips$fips)]
-node.stats2011none$STATE_NAME_R<-state.fips$polyname[match(node.stats2011none$NodeID, state.fips$fips)]
-
-ctname<-map('state', resolution=0, plot=FALSE)$names
-ctname<-as.matrix(ctname)
-name<-data.frame(ctname=ctname, GSCC2010=NA, GWCC2010=NA, GSCC2011=NA, GWCC2011=NA, GSCC2011none=NA, GWCC2011none=NA)
-
-cols <- colorRampPalette(brewer.pal(9, "PuBu"))(7)   # colors for level plots
-
-Mode <- function(x) {
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
-
-
-# DEFINE COLORS FOR 2010
-clusters=matrix(0,nrow=length(ctname),ncol=2)
-ctname<-as.character(ctname)
-  for(i in 1:length(node.stats$NodeID)){
-    temp=which(state.fips$fips==node.stats$NodeID[i])
-    temp2=which(ctname== as.character(state.fips[temp,6]))
-    clusters[temp2,1]=rep(node.stats[i,"StrongClusters"],length(temp2))
-    clusters[temp2,2]=rep(node.stats[i,"WeakClusters"],length(temp2))
-  }  
-  	clusters[clusters==0]=NA  # if no info cluster assigned, na= no data.   
-  	clusters.new=matrix(0,nrow=length(ctname),ncol=1)
-	clusters.new[clusters[,1]==as.numeric(Mode(na.exclude(clusters[,1])))]=cols[7]
-	clusters.new[(clusters[,1]!=as.numeric(Mode(na.exclude(clusters[,1]))) & clusters[,
-		2]==as.numeric(Mode(na.exclude(clusters[,2]))))]=cols[4]
-	clusters.new[(clusters[,1]!=as.numeric(Mode(na.exclude(clusters[,1]))) & clusters[,2]!=as.numeric(Mode(na.exclude(clusters[,2]))) & !is.na(clusters[,1]))]="lightskyblue1"
-	clusters.new[is.na(clusters[,1])]="gray93"
-
-name$color2010<-clusters.new
-edge2010<-edge2010[order(edge2010$N),]
-#NY, NC, VA, CT should all be light blue.  
-name$color2010[34:37]<-cols[7]  #NY 
-name$color2010[38:40]<-cols[7] # NC
-name$color2010[53:55]<-cols[4]		#VA
-name$color2010[6]<-cols[4]		#CT
-
-
-
-# 2010 map, with lines and state-level GWCC
-tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/GSCC&GWCC_st_lines_2010.tiff",
-width = 140, height = 90, units = "mm", res=600, compression="lzw")
-par(mai=c(1,1,1,1))
-map('state', resolution=0, fill=TRUE, col=name$color2010, boundary="dark gray", lwd=0.5)
-map('state', region=c("Iowa", "Texas", "California", 
-    "Minnesota", "New York", "North Carolina", "Wisconsin"),
-    resolution=0, col="black", add=TRUE, lwd=1.5)
-N<-(log(edge2010$N+1)-0.5)*1.6
-for (i in 1:150){	
-lines(x=c(edge2010$Olongitude[i], edge2010$Dlongitude[i]),
-      y=c(edge2010$Olatitude[i], edge2010$Dlatitude[i]), lwd=N[i], col=rgb(100, 100, 100, alpha=round(log((edge2010$N[i]+1), base=1.8)*5+192), max=255))
-}
-#alpha=log((edge2010$N[i]+1), base=1.8)*5+192
-dev.off()
-
-
-############################
-# BETTER: FOR KATIE
-tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/flowmapall_st_lines_2010.tiff",
- width = 140, height = 90, units = "mm", res=600, compression="lzw")
- par(mai=c(1,1,1,1))
- map('state', resolution=0, fill=TRUE, col="white", boundary="dark gray", lwd=0.5)
- map('state', region=c("Iowa", "Texas", "California", 
-     "Minnesota", "New York", "North Carolina", "Wisconsin"),
-     resolution=0, col="black", add=TRUE, lwd=1.5)
- N<-(log(edge2010$N+1, base=5)-0.6)*1.8
- for (i in 1:length(edge2010[,1])){	
- lines(x=c(edge2010$Olongitude[i], edge2010$Dlongitude[i]),
-       y=c(edge2010$Olatitude[i], edge2010$Dlatitude[i]), lwd=N[i], col="gray44")
- }
- dev.off()
-
-
-
-#################
-# 2011
-#################
-# add flows through state centroids
-data2011<-data11
-##make a vector of all pairs
-edge<-paste(as.character(data2011$O_ST_FIPS),as.character(data2011$D_ST_FIPS),sep='.u.')
-##make a vector of unique pairs
-edge1<-unique(paste(as.character(data2011$O_ST_FIPS),as.character(data2011$D_ST_FIPS),sep='.u.'))
-
-##censor the edges list if both vertices are the same
-for(i in 1:length(edge1)){
-  if(sum(paste(strsplit(edge1[i],'.u.')[[1]][2],strsplit(edge1[i],'.u.')[[1]][1],sep='.u.')==edge1)>0){
-		edge2<-edge1[-which(paste(strsplit(edge1[i],'.u.')[[1]][2],strsplit(edge1[i],'.u.')[[1]][1],sep='.u.')==edge1)]
-		}
-	}
-
-##use the list of unique vertex pairs to tabulate their frequency
-edge2011<-data.frame(edge=as.character(edge2), node1=NA, node2=NA, unique=NA, N=0, swine=0)	
-	for (i in 1:length(edge2011[,1])){
-	edge2011$node1[i]=as.character(strsplit(as.character(edge2011$edge[i]), '.u.')[[1]][1])
-	edge2011$node2[i]=strsplit(as.character(edge2011$edge[i]), '.u.')[[1]][2]
-}
-
-temp<-NA
-for (i in 1:length(edge2011[,1])){
-	temp[i]<-sum(which(paste(edge2011$node2[i], edge2011$node1[i], sep='.u.')== as.character(edge2011$edge)))
-	ifelse(temp[i]==0, edge2011$unique[i]<-TRUE, edge2011$unique[i]<-FALSE)
-}
-
-for (i in 1: length(data2011[,1])){
-	for (j in 1:length(edge2011[,1])){
-		if (
-		paste(as.character(data2011$O_ST_FIPS[i]),as.character(data2011$D_ST_FIPS[i]),sep='.u.')==
-		as.character(edge2011$edge[j]) || paste(as.character(data2011$D_ST_FIPS[i]), 
-		as.character(data2011$O_ST_FIPS[i]),sep='.u.')== as.character(edge2011$edge[j]))
-		edge2011$N[j]<- edge2011$N[j]+1
-		edge2011$swine[j]<- edge2011$swine[j] + data2011$NUM_SWINE[i]		
-	}
-}	
-
-# add in centroid data for flows from centroids and matchdata compiled for 2010 above
-edge2011$Olatitude<-NA; edge2011$Dlatitude<-NA
-edge2011$Olatitude<- matchdata$Rlatitude[match(edge2011$node1, matchdata$ST_FIPS)]
-edge2011$Dlatitude<- matchdata$Rlatitude[match(edge2011$node2, matchdata$ST_FIPS)]
-edge2011$Olongitude<- matchdata$Rlongitude[match(edge2011$node1, matchdata$ST_FIPS)]
-edge2011$Dlongitude<- matchdata$Rlongitude[match(edge2011$node2, matchdata$ST_FIPS)]
-
-# check for strange origin locations?
-#edge2011<-edge2011[-21,]   # remove row 113, with a shipment from Cali to Hawaii (FIPS=15)...
-edge2011<-edge2011[edge2011$node2!=15,]
-edge2011<-edge2011[edge2011$node2!=2,]
-
-# get colors based on strong and weak components for map, loaded above in 2010 figure
-#node.stats<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2010.csv")
-#node.stats2011<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011all.csv")
-#node.stats2011none<-read.csv("~/Documents/post-doc/Swine/node_stats_st_2011noNE.csv")
-
-#node.stats$STATE_NAME_R<-state.fips$polyname[match(node.stats$NodeID, state.fips$fips)]
-#node.stats2011$STATE_NAME_R<-state.fips$polyname[match(node.stats2011$NodeID, state.fips$fips)]
-#node.stats2011none$STATE_NAME_R<-state.fips$polyname[match(node.stats2011none$NodeID, state.fips$fips)]
-
-###########################
-###########################
-# skip this part
-###########################
-###########################
-
-ctname<-map('state', resolution=0, plot=FALSE)$names
-ctname<-as.matrix(ctname)
-name<-data.frame(ctname=ctname, GSCC2010=NA, GWCC2010=NA, GSCC2011=NA, GWCC2011=NA, GSCC2011none=NA, GWCC2011none=NA)
-
-cols <- colorRampPalette(brewer.pal(9, "PuBu"))(7)   # colors for level plots
-
-Mode <- function(x) {
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
-
-
-# DEFINE COLORS FOR 2011
-clusters=matrix(0,nrow=length(ctname),ncol=2)
-ctname<-as.character(ctname)
-  for(i in 1:length(node.stats2011$NodeID)){
-    temp=which(state.fips$fips==node.stats2011$NodeID[i])
-    temp2=which(ctname== as.character(state.fips[temp,6]))
-    clusters[temp2,1]=rep(node.stats2011[i,"StrongClusters"],length(temp2))
-    clusters[temp2,2]=rep(node.stats2011[i,"WeakClusters"],length(temp2))
-  }  
-  	clusters[clusters==0]=NA  # if no info cluster assigned, na= no data.   
-  	clusters.new=matrix(0,nrow=length(ctname),ncol=1)
-	clusters.new[clusters[,1]==as.numeric(Mode(na.exclude(clusters[,1])))]=cols[7]
-	clusters.new[(clusters[,1]!=as.numeric(Mode(na.exclude(clusters[,1]))) & clusters[,
-		2]==as.numeric(Mode(na.exclude(clusters[,2]))))]=cols[4]
-	clusters.new[(clusters[,1]!=as.numeric(Mode(na.exclude(clusters[,1]))) & clusters[,2]!=as.numeric(Mode(na.exclude(clusters[,2]))) & !is.na(clusters[,1]))]="lightskyblue1"
-	clusters.new[is.na(clusters[,1])]="gray93"
-
-name$color2011<-clusters.new
-edge2011<-edge2011[order(edge2011$N),]
-#NY, NC, VA, CT should all be light blue.  
-name$color2011[34:37]<-cols[7]  #NY 
-name$color2011[38:40]<-cols[7] # NC
-name$color2011[53:55]<-cols[4]		#VA
-name$color2011[6]<-cols[4]		#CT
-
-
-# 2011 map, with lines and state-level GWCC
-tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/GSCC&GWCC_st_lines_2011.tiff",
-width = 140, height = 90, units = "mm", res=600, compression="lzw")
-par(mai=c(1,1,1,1))
-map('state', resolution=0, fill=TRUE, col=name$color2011, boundary="dark gray", lwd=0.5)
-map('state', region=c("Iowa", "Texas", "California", 
-    "Minnesota", "New York", "North Carolina", "Wisconsin"),
-    resolution=0, col="black", add=TRUE, lwd=1.5)
-N<-(log(edge2011$N+1)-0.5)*1.6
-for (i in 1:150){	
-lines(x=c(edge2011$Olongitude[i], edge2011$Dlongitude[i]),
-      y=c(edge2011$Olatitude[i], edge2011$Dlatitude[i]), lwd=N[i], 
-      col=rgb(100, 100, 100, max=255, alpha=round(log((edge2011$N[i]+1), base=1.8)*4+220)))
-}
-#alpha=log((edge2010$N[i]+1), base=1.8)*5+192
-#alpha=round(log((edge2011$N[i]+1), base=1.8)*4+192)
-dev.off()
-
-##############################
-# Map for Katie
-##############################
-############################
-tiff(filename="~/Documents/post-doc/Swine/paperdrafts_swine/flowmapall_st_lines_2011.tiff",
- width = 140, height = 90, units = "mm", res=600, compression="lzw")
- par(mai=c(1,1,1,1))
- map('state', resolution=0, fill=TRUE, col="white", boundary="dark gray", lwd=0.5)
- map('state', region=c("Iowa", "Texas", "California", 
-     "Minnesota", "New York", "North Carolina", "Wisconsin", "Nebraska"),
-     resolution=0, col="black", add=TRUE, lwd=1.5)
- N<-(log(edge2011$N+1, base=5)-0.4)*1.8
- for (i in 1:length(edge2011[,1])){	
- lines(x=c(edge2011$Olongitude[i], edge2011$Dlongitude[i]),
-       y=c(edge2011$Olatitude[i], edge2011$Dlatitude[i]), lwd=N[i], col="gray44")
- }
- dev.off()
-
-
-
-temp<-data2011[data2011$O_STATE_NAME_FIPS=="California",]
-table(temp$D_STATE_NAME_FIPS)
-
-
-
-##################################
-##################################
-# plot WEIGHTED outdegree by county- data= cvi data 
-##################################
-##################################
-data2010<-data[data$SAMPLE_YEAR=="2010",]
-data2011<-data[data$SAMPLE_YEAR=="2011",]
+# Percent of shipmetns reporting sex information
+d<- length(data$totalfem[data$totalmale > 0]) + length(data$totalfem[data$totalfem > 0])
+d/ length(data$totalfem)
+
+
+# For supplement
+data.cvi$NUM_MALE2<-data.cvi$NUM_BOAR+ data.cvi$NUM_BARROW
+data.cvi$NUM_FEMALE2<-data.cvi$NUM_GILT+ data.cvi$NUM_SOW
+data.cvi$totalfem<-data.cvi$NUM_FEMALE+data.cvi$NUM_FEMALE2
+tapply(data.cvi$totalfem, data.cvi$SAMPLE_YEAR2, sum)
+data.cvi$totalmale<-data.cvi$NUM_MALE+data.cvi$NUM_MALE2
+tapply(data.cvi$totalmale, data.cvi$SAMPLE_YEAR2, sum)
+
+
+####################################################################
+####################################################################
+# FIGURE 4.1 Weighted outdegree at county-level, 2010
+####################################################################
+####################################################################
+# all these figures use full dataset 
+data2010 <- data10
+data2011 <- data11
 
 # make networks
-counties=unique(cbind(c(data2010$O_ST_FIPS, data2010$D_ST_FIPS), c(data2010$O_FIPS, data2010$D_FIPS)))  
-counties=counties[order(counties[,2]),]
- node.stats=data.frame(matrix(NA,nrow=length(counties[,1]),
+counties <- unique(cbind(c(data2010$O_ST_FIPS, data2010$D_ST_FIPS), c(data2010$O_FIPS, data2010$D_FIPS)))  
+counties <- counties[order(counties[,2]),]
+ node.stats <- data.frame(matrix(NA,nrow=length(counties[,1]),
                              ncol=12,
                              dimnames=list(NULL, c("StateID","NodeID",
-                             "Unweighted_InDeg","InDegree_Ship","InDegree_Swine", 							 							"Unweighted_OutDeg","OutDegree_Ship","OutDegree_Swine",
- 							"TotalDegree_Ship", "TotalDegree_Swine", "Betweenness",
- 							"Transitivity"))))	
-node.stats$NodeID=counties[,2]
-node.stats$StateID=counties[,1]
-# It is good practice to watch what you do as you go.  Type summary to see what was done. 
+                             "Unweighted_InDeg","InDegree_Ship","InDegree_Swine", 							 							
+                             "Unweighted_OutDeg","OutDegree_Ship","OutDegree_Swine", 
+                             "TotalDegree_Ship", "TotalDegree_Swine", "Betweenness",
+                             "Transitivity"))))	
+node.stats$NodeID <- counties[,2]
+node.stats$StateID <- counties[,1]
 summary(node.stats)  
 
-temp_graph1=graph.edgelist(el=as.matrix(cbind(as.character(data2010$O_FIPS), as.character(data2010$D_FIPS))), directed=TRUE)
-temp_graph2=graph.edgelist(el=as.matrix(unique(cbind(as.character(data2010$O_FIPS), as.character(data2010$D_FIPS)))), directed=TRUE)         #  not weighted
-temp_graph<-set.edge.attribute(temp_graph1,"weight",value=data2010$NUM_SWINE)
-                    										
-temp_graph_st=graph.edgelist(el=as.matrix(cbind(as.character(data2010$O_ST_FIPS), as.character(data2010$D_ST_FIPS))), directed=TRUE)
+temp_graph1 <- graph.edgelist(el = as.matrix(cbind(as.character(data2010$O_FIPS), as.character(data2010$D_FIPS))), 
+													directed=TRUE)
+temp_graph2 <- graph.edgelist(el = as.matrix(unique(cbind(as.character(data2010$O_FIPS), as.character(data2010$D_FIPS)))),
+													 directed=TRUE) 
+temp_graph <- set.edge.attribute(temp_graph1,"weight",value = data2010$NUM_SWINE)					
+temp_graph_st <- graph.edgelist(el=as.matrix(cbind(as.character(data2010$O_ST_FIPS), as.character(data2010$D_ST_FIPS))), directed=TRUE)
+
 # Calculate node statistics  
-	node.stats$Unweighted_InDeg=degree(temp_graph2,mode=c("in"))[order(as.numeric(V(temp_graph2)$name))]
-	node.stats$Unweighted_OutDeg=degree(temp_graph2,mode=c("out"))																							[order(as.numeric(V(temp_graph2)$name))]
-    node.stats$InDegree_Ship=degree(temp_graph,mode=c("in"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$OutDegree_Ship=degree(temp_graph,mode=c("out"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$TotalDegree_Ship=node.stats$InDegree_Ship+node.stats$OutDegree_Ship
-    node.stats$InDegree_Swine=graph.strength(temp_graph,mode=c("in"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$OutDegree_Swine=graph.strength(temp_graph,mode=c("out"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$TotalDegree_Swine=node.stats$InDegree_Swine+node.stats$OutDegree_Swine
-    node.stats$Betweenness=betweenness(temp_graph2)[order(as.numeric(V(temp_graph2)$name))] 
-	node.stats$Transitivity=transitivity(temp_graph,type=c("local"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$Unweighted_InDeg <- degree(temp_graph2, mode = c("in"))[order(as.numeric(V(temp_graph2)$name))]
+node.stats$Unweighted_OutDeg <- degree(temp_graph2, mode = c("out"))[order(as.numeric(V(temp_graph2)$name))]
+node.stats$InDegree_Ship <- degree(temp_graph, mode = c("in"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$OutDegree_Ship <- degree(temp_graph, mode = c("out"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$TotalDegree_Ship <- node.stats$InDegree_Ship + node.stats$OutDegree_Ship
+node.stats$InDegree_Swine <- graph.strength(temp_graph, mode = c("in"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$OutDegree_Swine <- graph.strength(temp_graph, mode = c("out"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$TotalDegree_Swine <- node.stats$InDegree_Swine + node.stats$OutDegree_Swine
+node.stats$Betweenness <- betweenness(temp_graph2)[order(as.numeric(V(temp_graph2)$name))] 
+node.stats$Transitivity <- transitivity(temp_graph,type=c("local"))[order(as.numeric(V(temp_graph)$name))]
 
 #plot
-
-ctname<-map('county', resolution=0, plot=FALSE)$names
-ctname<-as.matrix(ctname)
+ctname <- map('county', resolution=0, plot=FALSE)$names
+ctname <- as.matrix(ctname)
 data(county.fips)
-node.stats$COUNTY_NAME_R<-county.fips$polyname[match(node.stats$NodeID, county.fips$fips)]
-name<-data.frame(ctname=ctname, OutDegreeShip=NA, OutDegreeSwine=NA)
-name$OutDegreeShip<-node.stats$OutDegree_Ship[match(name$ctname, node.stats$COUNTY_NAME_R)]
-name$OutDegreeSwine<-node.stats$OutDegree_Swine[match(name$ctname, node.stats$COUNTY_NAME_R)]
-name$OutDegreeShip[is.na(name$OutDegreeShip)]<-0
-name$OutDegreeSwine[is.na(name$OutDegreeSwine)]<-0
-# try two color schemes... since shipments range from 0 to 172.  
+node.stats$COUNTY_NAME_R <- county.fips$polyname[match(node.stats$NodeID, county.fips$fips)]
+name <- data.frame(ctname = ctname, OutDegreeShip = NA, OutDegreeSwine = NA)
+name$OutDegreeShip <- node.stats$OutDegree_Ship[match(name$ctname, node.stats$COUNTY_NAME_R)]
+name$OutDegreeSwine <- node.stats$OutDegree_Swine[match(name$ctname, node.stats$COUNTY_NAME_R)]
+name$OutDegreeShip[is.na(name$OutDegreeShip)] <- 0
+name$OutDegreeSwine[is.na(name$OutDegreeSwine)] <- 0
 
 # 1) range of one color
-cols <- colorRampPalette(brewer.pal(9, "YlGnBu"))(172)   # colors for level plots
-colmatch<-data.frame(num=seq(1,172,1), col=cols)
-name$col<-as.character(colmatch$col[match(name$OutDegreeShip, colmatch$num)])
-name$col[is.na(name$col)]<-"#FFFFFF"
+#cols <- colorRampPalette(brewer.pal(9, "YlGnBu"))(172)   # colors for level plots
+#colmatch<-data.frame(num=seq(1,172,1), col=cols)
+#name$col<-as.character(colmatch$col[match(name$OutDegreeShip, colmatch$num)])
+#name$col[is.na(name$col)]<-"#FFFFFF"
 
-par(mai=c(1,1,1,5))
-map('county', resolution=0, lwd=0.5, col="dark gray")
-map('county', resolution=0, fill=TRUE, col=name$col, boundary="light gray", lwd=0.5, add=TRUE)
-map('state', add=TRUE)
-map('state', region=c("Iowa", "Texas", "California", 
-    "Minnesota", "New York", "North Carolina", "Wisconsin"),
-    resolution=0, col="dark blue", add=TRUE, lwd=2)
-leg.txt<-rep("", 172); leg.txt[1]<-1; leg.txt[172]<-172
-color.legend(11, 6, 11.8, 9, leg.txt, rect.col=cols)
-
-
+#par(mai=c(1,1,1,5))
+#map('county', resolution=0, lwd=0.5, col="dark gray")
+#map('county', resolution=0, fill=TRUE, col=name$col, boundary="light gray", lwd=0.5, add=TRUE)
+#map('state', add=TRUE)
+#map('state', region=c("Iowa", "Texas", "California", 
+#   "Minnesota", "New York", "North Carolina", "Wisconsin"),
+#    resolution=0, col="dark blue", add=TRUE, lwd=2)
+#leg.txt<-rep("", 172); leg.txt[1]<-1; leg.txt[172]<-172
+#color.legend(11, 6, 11.8, 9, leg.txt, rect.col=cols)
 
 # on log scale
 # 1) range of one color
@@ -787,8 +293,11 @@ map('state', region=c("Iowa", "Texas", "California",
 #legend.gradient(pnts, cols = leg.col, limits=c("1", "175"), title="", cex=0.5)
 dev.off()
 
-################################
-# IN-DEGREE FIGURE 2010
+####################################################################
+####################################################################
+# FIGURE 4.2 Weighted indegree at county-level, 2010
+####################################################################
+####################################################################
 name$InDegreeShip<- node.stats$InDegree_Ship[match(name$ctname, node.stats$COUNTY_NAME_R)]
 name$InDegreeSwine<-node.stats$InDegree_Swine[match(name$ctname, node.stats$COUNTY_NAME_R)]
 name$InDegreeShip[is.na(name$InDegreeShip)]<-0
@@ -810,7 +319,7 @@ for (i in 1:length(name$InDegreeShip)){
 }
 name$colID<-as.character(colmatch$col[match(name$IDbin, colmatch$num)])
 
-tiff('paperdrafts_swine/Figure5a_swine_id_countylevel_2010_nolegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/swine_id_countylevel_2010_nolegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$colID, boundary="light gray", lwd=0.3, add=TRUE)
@@ -825,10 +334,11 @@ map('state', region=c("Iowa", "Texas", "California",
 #legend.gradient(pnts, cols = leg.col, limits=c("1", "102"), title="", cex=0.5)
 dev.off()
 
-
-################################
-# Betweenness FIGURE 2010
-################################
+####################################################################
+####################################################################
+# FIGURE 4.3 betweenness at county-level, 2010
+####################################################################
+####################################################################
 name$Betweenness<- node.stats$Betweenness[match(name$ctname, node.stats$COUNTY_NAME_R)]
 name$Betweenness[is.na(name$Betweenness)]<-0
 
@@ -852,7 +362,7 @@ for (i in 1:length(name$Betweenness)){
 
 name$colB<-as.character(colmatch$col[match(name$Bbin, colmatch$num)])
 
-tiff('paperdrafts_swine/Figure5e_swine_btwn_countylevel_2010_nolegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/swine_btwn_countylevel_2010_nolegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$colB, boundary="light gray", lwd=0.3, add=TRUE)
@@ -867,67 +377,60 @@ map('state', region=c("Iowa", "Texas", "California",
 #legend.gradient(pnts, cols = leg.col, limits=c("1", "13922"), title="", cex=0.5)
 dev.off()
 
-
-
-
-#####################################
-#####################################
-#####################################
-# make networks on the log scale for 2011
-#####################################
-#####################################
+####################################################################
+####################################################################
+# FIGURE 4.4 Weighted outdegree at county-level, 2011
+####################################################################
+####################################################################
 
 # make networks
-counties=unique(cbind(c(data2011$O_ST_FIPS, data2011$D_ST_FIPS), c(data2011$O_FIPS, data2011$D_FIPS)))  
-counties=counties[order(counties[,2]),]
- node.stats=data.frame(matrix(NA,nrow=length(counties[,1]),
-                             ncol=12,
-                             dimnames=list(NULL, c("StateID","NodeID",
+counties <- unique(cbind(c(data2011$O_ST_FIPS, data2011$D_ST_FIPS), c(data2011$O_FIPS, data2011$D_FIPS)))  
+counties <- counties[order(counties[,2]),]
+ node.stats <- data.frame(matrix(NA,nrow = length(counties[,1]),
+                             ncol = 12,
+                             dimnames = list(NULL, c("StateID","NodeID",
                              "Unweighted_InDeg","InDegree_Ship","InDegree_Swine", 							 							"Unweighted_OutDeg","OutDegree_Ship","OutDegree_Swine",
  							"TotalDegree_Ship", "TotalDegree_Swine", "Betweenness",
  							"Transitivity"))))	
-node.stats$NodeID=counties[,2]
-node.stats$StateID=counties[,1]
+node.stats$NodeID <- counties[,2]
+node.stats$StateID <- counties[,1]
 # It is good practice to watch what you do as you go.  Type summary to see what was done. 
 summary(node.stats)  
 
-temp_graph1=graph.edgelist(el=as.matrix(cbind(as.character(data2011$O_FIPS), as.character(data2011$D_FIPS))), directed=TRUE)
-temp_graph2=graph.edgelist(el=as.matrix(unique(cbind(as.character(data2011$O_FIPS), as.character(data2011$D_FIPS)))), directed=TRUE)         #  not weighted
-temp_graph<-set.edge.attribute(temp_graph1,"weight",value=data2011$NUM_SWINE)
-                    										
-temp_graph_st=graph.edgelist(el=as.matrix(cbind(as.character(data2011$O_ST_FIPS), as.character(data2011$D_ST_FIPS))), directed=TRUE)
+temp_graph1 <- graph.edgelist(el = as.matrix(cbind(as.character(data2011$O_FIPS), as.character(data2011$D_FIPS))), directed = TRUE)
+temp_graph2 <- graph.edgelist(el = as.matrix(unique(cbind(as.character(data2011$O_FIPS), as.character(data2011$D_FIPS)))), directed = TRUE)
+temp_graph <- set.edge.attribute(temp_graph1,"weight", value = data2011$NUM_SWINE)                   										
+temp_graph_st <- graph.edgelist(el = as.matrix(cbind(as.character(data2011$O_ST_FIPS), as.character(data2011$D_ST_FIPS))), directed = TRUE)
+
 # Calculate node statistics  
-	node.stats$Unweighted_InDeg=degree(temp_graph2,mode=c("in"))[order(as.numeric(V(temp_graph2)$name))]
-	node.stats$Unweighted_OutDeg=degree(temp_graph2,mode=c("out"))																							[order(as.numeric(V(temp_graph2)$name))]
-    node.stats$InDegree_Ship=degree(temp_graph,mode=c("in"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$OutDegree_Ship=degree(temp_graph,mode=c("out"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$TotalDegree_Ship=node.stats$InDegree_Ship+node.stats$OutDegree_Ship
-    node.stats$InDegree_Swine=graph.strength(temp_graph,mode=c("in"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$OutDegree_Swine=graph.strength(temp_graph,mode=c("out"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$TotalDegree_Swine=node.stats$InDegree_Swine+node.stats$OutDegree_Swine
-    node.stats$Betweenness=betweenness(temp_graph2)[order(as.numeric(V(temp_graph2)$name))] 
-	node.stats$Transitivity=transitivity(temp_graph,type=c("local"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$Unweighted_InDeg <- degree(temp_graph2, mode = c("in"))[order(as.numeric(V(temp_graph2)$name))]
+node.stats$Unweighted_OutDeg <- degree(temp_graph2, mode = c("out"))[order(as.numeric(V(temp_graph2)$name))]
+node.stats$InDegree_Ship <- degree(temp_graph, mode = c("in"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$OutDegree_Ship <-degree(temp_graph, mode = c("out"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$TotalDegree_Ship <- node.stats$InDegree_Ship + node.stats$OutDegree_Ship
+node.stats$InDegree_Swine <- graph.strength(temp_graph, mode = c("in"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$OutDegree_Swine <- graph.strength(temp_graph,mode = c("out"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$TotalDegree_Swine <- node.stats$InDegree_Swine+node.stats$OutDegree_Swine
+node.stats$Betweenness <- betweenness(temp_graph2)[order(as.numeric(V(temp_graph2)$name))] 
+node.stats$Transitivity <- transitivity(temp_graph, type = c("local"))[order(as.numeric(V(temp_graph)$name))]
 
 #plot
-
-ctname<-map('county', resolution=0, plot=FALSE)$names
-ctname<-as.matrix(ctname)
+ctname <- map('county', resolution=0, plot=FALSE)$names
+ctname <- as.matrix(ctname)
 data(county.fips)
-node.stats$COUNTY_NAME_R<-county.fips$polyname[match(node.stats$NodeID, county.fips$fips)]
-name<-data.frame(ctname=ctname, OutDegreeShip=NA, OutDegreeSwine=NA)
-name$OutDegreeShip<-node.stats$OutDegree_Ship[match(name$ctname, node.stats$COUNTY_NAME_R)]
-name$OutDegreeSwine<-node.stats$OutDegree_Ship[match(name$ctname, node.stats$COUNTY_NAME_R)]
-name$OutDegreeShip[is.na(name$OutDegreeShip)]<-0
-name$OutDegreeSwine[is.na(name$OutDegreeSwine)]<-0
-
-# 167 is max this year. 
+node.stats$COUNTY_NAME_R <- county.fips$polyname[match(node.stats$NodeID, county.fips$fips)]
+name <- data.frame(ctname = ctname, OutDegreeShip=NA, OutDegreeSwine=NA)
+name$OutDegreeShip <- node.stats$OutDegree_Ship[match(name$ctname, node.stats$COUNTY_NAME_R)]
+name$OutDegreeSwine <- node.stats$OutDegree_Ship[match(name$ctname, node.stats$COUNTY_NAME_R)]
+name$OutDegreeShip[is.na(name$OutDegreeShip)] <- 0
+name$OutDegreeSwine[is.na(name$OutDegreeSwine)] <- 0
 
 # on log scale
 # 1) range of one color
 cols <- colorRampPalette(brewer.pal(9, "YlGnBu"))(6)   # colors for level plots
-colmatch<-data.frame(num=seq(0,6,1), col=c("white", cols))
-name$col<-as.character(colmatch$col[match(name$OutDegreeShip, colmatch$num)])
-name$col[is.na(name$col)]<-"#FFFFFF"
+colmatch <- data.frame(num=seq(0,6,1), col=c("white", cols))
+name$col <- as.character(colmatch$col[match(name$OutDegreeShip, colmatch$num)])
+name$col[is.na(name$col)] <- "#FFFFFF"
 name$ODbin<-NA
 for (i in 1:length(name$OutDegreeShip)){
 	if (name$OutDegreeShip[i]==0) {name$ODbin[i]<-0}
@@ -940,7 +443,7 @@ for (i in 1:length(name$OutDegreeShip)){
 }
 name$col<-as.character(colmatch$col[match(name$ODbin, colmatch$num)])
 
-tiff('paperdrafts_swine/Figure5d_swine_od_countylevel_2011_updatelegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/swine_od_countylevel_2011_updatelegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$col, boundary="light gray", lwd=0.3, add=TRUE)
@@ -958,9 +461,11 @@ colorlegend(col=cols, zval=c(0, 2.8, 7.4, 20.1, 54.6, 148.4, 403.4), zlim=c(1, 4
 #legend.gradient(pnts, cols = leg.col, limits=c("1", "175"), title="", cex=0.5)
 dev.off()
 
-################################
-# IN-DEGREE FIGURE 2011
-################################
+####################################################################
+####################################################################
+# FIGURE 4.5 Weighted indegree at county-level, 2011
+####################################################################
+####################################################################
 name$InDegreeShip<- node.stats$InDegree_Ship[match(name$ctname, node.stats$COUNTY_NAME_R)]
 name$InDegreeSwine<-node.stats$InDegree_Swine[match(name$ctname, node.stats$COUNTY_NAME_R)]
 name$InDegreeShip[is.na(name$InDegreeShip)]<-0
@@ -982,7 +487,7 @@ for (i in 1:length(name$InDegreeShip)){
 }
 name$colID<-as.character(colmatch$col[match(name$IDbin, colmatch$num)])
 
-tiff('paperdrafts_swine/Figure5b_swine_id_countylevel_2011_updatelegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/swine_id_countylevel_2011_updatelegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$colID, boundary="light gray", lwd=0.3, add=TRUE)
@@ -992,16 +497,13 @@ map('state', region=c("Iowa", "Texas", "California",
     resolution=0, col="dark blue", add=TRUE, lwd=1)
 # state level map legends use:
 colorlegend(col=cols[2:6], zval=c(0, 2.8, 7.4, 20.1, 54.6, 148.4), zlim=c(1, 148), log=TRUE, posx=c(0.8, 0.83), posy=c(0.22, 0.6), digit=0, cex=0.2)
-
-#leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5")
-#leg.col<-cols[2:6]
-#pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
-#legend.gradient(pnts, cols = leg.col, limits=c("1", "133"), title="", cex=0.5)
 dev.off()
 
-################################
-# Betweenness FIGURE 2011
-################################
+####################################################################
+####################################################################
+# FIGURE 4.6 Betweenness, 2011
+####################################################################
+####################################################################
 name$Betweenness<- node.stats$Betweenness[match(name$ctname, node.stats$COUNTY_NAME_R)]
 name$Betweenness[is.na(name$Betweenness)]<-0
 
@@ -1027,7 +529,7 @@ name$Bbin[756]<-1
 name$Bbin[1323]<-1
 name$colB<-as.character(colmatch$col[match(name$Bbin, colmatch$num)])
 
-tiff('paperdrafts_swine/Figure5f_swine_btwn_countylevel_2011_updatelegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/swine_btwn_countylevel_2011_updatelegend.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$colB, boundary="light gray", lwd=0.3, add=TRUE)
@@ -1036,19 +538,19 @@ map('state', region=c("Iowa", "Texas", "California",
     "Minnesota", "New York", "North Carolina", "Wisconsin", "Nebraska"),
     resolution=0, col="dark blue", add=TRUE, lwd=1)
 # state level map legends use:
-colorlegend(col=cols[3:9], zval=c(0, 4.48, 20.09, 90.02, 403.43, 1808, 8103), zlim=c(1, 8103), log=TRUE, posx=c(0.8, 0.83), posy=c(0.22, 0.6), digit=0, cex=0.2)
-
-# county legend
-#leg.txt<-c("0-1", "1-2", "2-3", "3-4", "4-5")
-#leg.col<-cols[3:9]
-#pnts = cbind(x =c(-71,-73.5,-73.5, -71), y =c(28, 38, 38, 28))
-#legend.gradient(pnts, cols = leg.col, limits=c("1", "13123"), title="", cex=0.5)
+colorlegend(col = cols[3:9], zval = c(1, 2, 3, 4, 5, 6, 7),
+	zlim = c(0, 7), log =FALSE, posx = c(0.8, 0.83), posy = c(0.22, 0.6), digit = 0, cex = 0.2)
+#colorlegend(col = cols[3:9], zval = c(1, 4.48, 20.09, 90.02, 403.43, 1808, 8103, 98715), 
+#	zlim = c(1, 98715), log = TRUE, posx = c(0.8, 0.83), posy = c(0.22, 0.6), digit = 0, cex = 0.2)
+#colorlegend(col = cols[3:9], zval = c(0, 4.48, 20.09, 90.02, 403.43, 1808, 8103), 
+#	zlim = c(1, 8103), log = TRUE, posx = c(0.8, 0.83), posy = c(0.22, 0.6), digit = 0, cex = 0.2)
 dev.off()
+
 
 
 ###############################################
 #############################################
-# Figure 6: MAPS OF IN-DEGREE AND OUT DEGREE AT STATE LEVEL
+# Figure 5 MAPS OF IN-DEGREE AND OUT DEGREE AT STATE LEVEL
 #############################################
 ###############################################
 net.stats_st_2011<-read.csv("~/Documents/post-doc/Swine/net_stats_st_2011all.csv")
