@@ -1,3 +1,5 @@
+# NEED TO REMOVE WITHIN STATE, WIHTIN COUNTY, SLAUGHTER
+
 ####################################################################
 ####################################################################
 ####################################################################
@@ -32,6 +34,12 @@ data.cvi <- data.cvi[!is.na(data.cvi$SAMPLE_YEAR2), ]  #-38
 data.cvi <- data.cvi[!is.na(data.cvi $O_FIPS), ]
 data.cvi <- data.cvi[!is.na(data.cvi $D_FIPS), ]
 data.cvi <- data.cvi[data.cvi$NUM_SWINE > 0, ]
+
+# proxy for non-slaughter out-of-state shipments
+data.cvi <-data.cvi[data.cvi$O_FIPS!= data.cvi$D_FIPS,]  
+data.cvi <-data.cvi[data.cvi$O_ST_FIPS!= data.cvi$D_ST_FIPS,]
+data.cvi <- data.cvi[data.cvi$PURPOSE != "Slaughter",]
+
 summary(data.cvi)
 colnames(data.cvi)
 
@@ -48,9 +56,6 @@ data.cvi <- data.cvi[, c("STATE", "SAMPLE_YEAR2",
     "O_FIPS_X", "O_FIPS_Y", "O_STATE", 
     "D_FIPS", "O_FIPS", "O_ST_FIPS", "D_ST_FIPS", "MOVE" )]
 
-# remove NAs    
-data.cvi <- data.cvi[!is.na(data.cvi$O_FIPS),]
-data.cvi <- data.cvi[!is.na(data.cvi$D_FIPS),]
  
 # Subset cvi data by year.
 data10 <- data.cvi[data.cvi$SAMPLE_YEAR2=="2010",]
@@ -76,7 +81,7 @@ my.histogram.maker<-function(data, filename){
   	max.y = max(swine.hist$counts)
   	barplot(swine.hist$counts, width = 1, space = 0, main = NULL, 
   		xlab="", ylim=c(0,max.y+10), ylab="", cex.lab = 1.5, 
-  		cex.axis = 1.4, bty = "n", col = "darkseagreen", las = 1)
+  		cex.axis = 1.4, bty = "n", col = "darkgray", las = 1)
   	mtext("Number of shipments", side = 2, line = 4.4, cex = 1.6) 
 	mtext("Number of swine", side = 1, line = 3, cex = 1.6) 
   	axis(side = 1, at = seq(1, (length(swine.hist$breaks)-1)), 
@@ -92,7 +97,7 @@ my.histogram.maker<-function(data, filename){
   	barplot(swine.hist100$counts, width = 1, space = 0, main = NULL, 
   		xlab = "", ylim = c(0, max.y100 + 10), 
   		cex.lab = 1.3, cex.axis = 1.2, bty = "n", 
-  		col = "darkslateblue", las = 1, tcl = -0.2)
+  		col = "darkgray", las = 1, tcl = -0.2)
   	axis(side = 1, at = seq(1, (length(swine.hist100$breaks)-1)),
   		labels = swine.hist100$breaks[-1], cex.lab = 1.2, tcl = -0.2)
   	dev.off()
@@ -105,90 +110,16 @@ my.histogram.maker(alldata, "Figure1")
 # Figure 2: Purpose/ Production type, made in prism
 ####################################################################
 ####################################################################
-table(data$PURPOSE)
-tapply(data$NUM_SWINE, data$PURPOSE, sum)
-
+# figure 2 (see demographic_purpose_analyses for analyses)
 table(data10$PURPOSE)
-table(data11$PURPOSE)
-table(data11$PURPOSE[data11$O_STATE != "NE"])
-# feeding
-sum(data10$MOVE[data10$PURPOSE %in% c("Feeding", "Feeding/Graing")])
-sum(data11$MOVE[data11$O_STATE != "NE" & data11$PURPOSE %in% c("Feeding", "Feeding/Graing")])
-# not specified
-sum(data10$MOVE[data10$PURPOSE %in% c("NOT SPECIFIED", "Other", "No Data", "Not Legible", "")])
-sum(data11$MOVE[data11$O_STATE != "NE" & data11$PURPOSE %in% c("NOT SPECIFIED", "Other", "No Data", "Not Legible", "")])
-
-# For figure A2 with NE data
-table(data.cvi$PURPOSE)
-tapply(data.cvi$NUM_SWINE, data.cvi$PURPOSE, sum)
+table(data11red $PURPOSE)
 
 ####################################################################
 ####################################################################
 # Figure 3: Age and sex patterns, made in prism
 ####################################################################
 ####################################################################
-
-# AGE:  calculate sum of number of swine by year
-####################################################################
-tapply(data$NUM_AGE_0.2_MONTHS, data$SAMPLE_YEAR2, sum)
-tapply(data$NUM_AGE_2.6_MONTHS, data$SAMPLE_YEAR2, sum)
-tapply(data$NUM_AGE_6._MONTHS, data$SAMPLE_YEAR2, sum)
-
-data$wrongness_age<-data$NUM_SWINE-(data$NUM_AGE_0.2_MONTHS+data$NUM_AGE_2.6_MONTHS+data$NUM_AGE_6._MONTHS)
-par(mfrow = c(1, 2))
-hist(data$wrongness_age)
-hist(data$wrongness_age[data$wrongness_age>50])
- #total number of shipments- length(data[,1])
- length(data[,1]) - length(data$wrongness_age[data$wrongness_age==0])  # 400 still off... = 6.9% wrong
-
-# SEX:  calculate sum of number of swine by year
-####################################################################
-tapply(data$NUM_MALE, data$SAMPLE_YEAR2, sum)
-tapply(data$NUM_FEMALE, data$SAMPLE_YEAR2, sum)
-
-# with Nebraska
-tapply(data.cvi$NUM_MALE, data.cvi$SAMPLE_YEAR2, sum)
-tapply(data.cvi$NUM_FEMALE, data.cvi$SAMPLE_YEAR2, sum)
-
-# calculates sum of number of gilt, boar, barrow ect. 
-tapply(data$NUM_BOAR, data$SAMPLE_YEAR2, sum)
-tapply(data$NUM_BARROW, data$SAMPLE_YEAR2, sum)
-tapply(data$NUM_GILT, data$SAMPLE_YEAR2, sum)
-tapply(data$NUM_SOW, data$SAMPLE_YEAR2, sum)
-
-# there are 1659 rows with information on either NUM_MALE or NUM_FEMALE; when present, this is also mostly correct. 
-data$wrongness_sex<-data$NUM_SWINE-(data$NUM_MALE+data$NUM_FEMALE)
-
-# there are 1167 rows with information on either NUM_MALE2 or NUM_FEMALE2; when it is present, it matches NUM_SWINE
-data$NUM_MALE2<-data$NUM_BOAR+data$NUM_BARROW
-data$NUM_FEMALE2<-data$NUM_GILT+data$NUM_SOW
-data$wrongness_sex2<-data$NUM_SWINE-(data$NUM_MALE2+data$NUM_FEMALE2)
-par(mfrow = c(1,2))
-hist(data$wrongness_sex)
-hist(data$wrongness_sex2)
-
-# Decide if we can sum the two characterizations (e.g. people either fill out the male/female column or the boar/barrow ect column):
-data$totalsex<-data$NUM_MALE+data$NUM_FEMALE+ data$NUM_FEMALE2+data$NUM_MALE2
-data$wrongness<-data$NUM_SWINE-data$totalsex
-summary(data$wrongness)   # no non-negative numbers, so no duplicatess!
-
-data$totalfem<-data$NUM_FEMALE+data$NUM_FEMALE2
-tapply(data$totalfem, data$SAMPLE_YEAR2, sum)
-data$totalmale<-data$NUM_MALE+data$NUM_MALE2
-tapply(data$totalmale, data$SAMPLE_YEAR2, sum)
-
-# Percent of shipmetns reporting sex information
-d<- length(data$totalfem[data$totalmale > 0]) + length(data$totalfem[data$totalfem > 0])
-d/ length(data$totalfem)
-
-
-# For supplement
-data.cvi$NUM_MALE2<-data.cvi$NUM_BOAR+ data.cvi$NUM_BARROW
-data.cvi$NUM_FEMALE2<-data.cvi$NUM_GILT+ data.cvi$NUM_SOW
-data.cvi$totalfem<-data.cvi$NUM_FEMALE+data.cvi$NUM_FEMALE2
-tapply(data.cvi$totalfem, data.cvi$SAMPLE_YEAR2, sum)
-data.cvi$totalmale<-data.cvi$NUM_MALE+data.cvi$NUM_MALE2
-tapply(data.cvi$totalmale, data.cvi$SAMPLE_YEAR2, sum)
+# figure 3 (see demographic_purpose_analyses for analyses)
 
 
 ####################################################################

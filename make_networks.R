@@ -7,6 +7,12 @@
 # Save results to our working directory as net_stats_2010.csv ect. 
 #################################################
 #################################################
+# Outline
+# Step 1:  Set your working directory and install
+# Step 2:  Read in the data and remove/change any wierd things
+# Step 3: Make networks
+#################################################
+#################################################
 
 
 #################################################
@@ -16,16 +22,6 @@
 # set working directory.
 setwd("~/Documents/post-doc/Swine")
 
-# to install a package, you use the command below.  
-# A window will pop up allowing you to choose a 
-# location near here to download the package from. 
-# You will only need to do this once per program/computer. 
-# The package is now stored on the computer.  
-#install.packages(c("igraph", "plyr")  
-
-# Each time you use a package, you will need to load it.  
-# This you will do everytime you use a package 
-# (e.g. you can skip the step above in subsequet uses)
 library(igraph)  # igraph is the package that makes networks
 library(plyr)      #  plyr helps manipulate dataframes
 
@@ -33,7 +29,6 @@ library(plyr)      #  plyr helps manipulate dataframes
 #################################################
 # Step 2:  Read in the data and remove/change any wierd things
 #################################################
-
 dat = read.csv("Swine_cvi_final.csv")
 dat = dat[!is.na(dat$NUM_SWINE),]  #-1
 dat = dat[dat$NUM_SWINE>0,] # -13
@@ -41,6 +36,7 @@ dat = dat[!is.na(dat$SAMPLE_YEAR2),]  #-38 #Clay added new col for year
 dat = dat[!is.na(dat$O_FIPS),]
 dat = dat[!is.na(dat$D_FIPS),]
 dat = dat[dat$NUM_SWINE>0,]
+
 summary(dat)
 
 # make a new column of 1s that represents the number of shipments
@@ -55,7 +51,9 @@ dat<-dat[, c("STATE", "SAMPLE_YEAR2", "PURPOSE",
 	"O_ST_FIPS", "D_ST_FIPS")]
 summary(dat)
 
-data<-dat[!is.na(dat$D_FIPS),]
+# Proxy for non-slaughter, out-of state shipments!
+data = dat[dat$PURPOSE != "Slaughter",]
+data<-data[!is.na(data$D_FIPS),]
 data<-data[data$O_FIPS!=data$D_FIPS,]  # REMOVE INTRASTATE SHIPMENTS!
 length(data[data$O_ST_FIPS==data$D_ST_FIPS,])
 data<-data[data$O_ST_FIPS!=data$D_ST_FIPS,]
@@ -309,13 +307,6 @@ make_state_networks(data2011, filename="2011all")
 make_state_networks(datared2011, filename="2011noNE")
 
 # need to hash out ave nearest neighbor degree and net.assortivity.
-make_state_networks(datasub2010, filename="sub2010")
-make_state_networks(datasub2011, filename="sub2011all")
-make_state_networks(datasubred2011, filename="sub2011noNE")
-
-######################
-# summary statistics 
-#datastates<-c(19, 6, 27, 31, 36, 37, 48, 55)  # Iowa=19, TX=48, CA=6, MN=27, NE=31, NY=36, NC=37, WI=55
-#datastatenoNE<-c(19, 6, 27, 36, 37, 48, 55)
-#summary(node2010[node2010$StateID %in% datastates])
-
+#make_state_networks(datasub2010, filename="sub2010")
+#make_state_networks(datasub2011, filename="sub2011all")
+#make_state_networks(datasubred2011, filename="sub2011noNE")
