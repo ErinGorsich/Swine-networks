@@ -1,0 +1,43 @@
+# Data read in#
+##########################################
+##########################################
+# Functions to make state (make_state_networks) and county level networks (make_networks)#
+source('~/Documents/post-doc/Swine/CommuterAgreementAnalyses/make_networks.R', chdir = TRUE)#
+library(igraph)#
+library(boot)#
+#
+# Read in 2014 commuter agreement data#
+##########################################
+ca <- read.csv("~/Documents/post-doc/Swine/CommuterAgreementAnalyses/SWINE Commuter Data - FTP site originals/Swine_Commuter_Data_31May2017_02.csv")#
+ca <- ca[ca$Year == "2014",]#
+# no longer an issue in this dataset#
+#errors <- c("Lowden", "IA50846", "IA52586")#
+#ca$D.state[ca$D.state %in% errors] <- "IA"#
+length(ca$O.state)  #10364 shipments total#
+table(ca$O.state, ca$D.state)#
+ca <- ca[!is.na(ca$D.state),]  # 321 removed#
+ca <- ca[!is.na(ca$O.state),]  # 5 removed#
+length(ca$O.state)  # 10043 shipments after cleaning#
+ca <- ca[!is.na(ca$NUM.SHIPPED),]  # 6 removed#
+ca$O.state <- as.character(ca$O.state)#
+ca$D.state <- as.character(ca$D.state)#
+# one county was associated with two different states. #
+#Checking the data, this looks like a typo as Minnesota has state fips 27#
+ca$D.state[ca$D.FIPS == 27045 & !is.na(ca$D.FIPS)] <- "MN"#
+#
+statefips <- read.csv("~/Documents/post-doc/2009-2011 comparison final/county_centroid_coordinates.csv")#
+statefips$stab <- as.character(statefips$stab)#
+ca$O.state.FIPS <- statefips$ST_FIPS[match(ca$O.state, statefips$stab)]#
+ca$D.state.FIPS <-  statefips$ST_FIPS[match(ca$D.state, statefips$stab)]#
+ca <- ca[!(ca$O.state.FIPS == ca$D.state.FIPS),]   #removed 7, now at 10030 records#
+ca <- ca[!(ca$D.state.FIPS == 19 & ca$D.FIPS == "46083"),]#
+ca <- ca[!is.na(ca$O.state.FIPS), ]
+summary(ca)
+length(ca)
+length(ca[,1])
+length(unique(c(ca$O.FIPS, ca$D.FIPS)))
+t <- read.csv("~/Documents/post-doc/Swine/CommuterAgreementAnalyses/Swine_Commuter_Database_v2.csv")
+summary(t)
+table(t$O.state, t$PRODUCER)
+table(t$FILE.SOURCE)
+table(t$O.state, t$D.state)

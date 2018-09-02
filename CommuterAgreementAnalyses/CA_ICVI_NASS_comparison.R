@@ -178,53 +178,21 @@ get_corr<-function(netval, nassval){
 }
 
 
-
-
-
-########################################
-########################################
-# 1.5) Histogram for report on shipment size
-########################################
-########################################
-summary(as.numeric(as.character(caraw$NUM.SHIPPED)))
-summary(as.numeric(as.character(cvi2011$NUM_SWINE)))
-
 wilcox.test(cvi2011$NUM_SWINE, caraw$NUM.SHIPPED)
 
 
-swine.hist =  hist(canum, plot=FALSE) 
-#	tiff(paste(filename, ".tiff", sep=""), 
-#		width=9, height=7, units="in", res=600)
-par(mar=c(2,6,4,2), fig = c(0, 1, 0.25, 1))
-canum <- as.numeric(as.character(caraw$NUM.SHIPPED))
-canum <- na.exclude(canum)
-max.x = max(swine.hist$breaks)
-max.y = max(swine.hist$counts)
-barplot(swine.hist$counts, width = 1, space = 0, main = NULL,
-			xlab="", ylim=c(0,max.y+10), ylab="", cex.lab = 1.5, 
-  			cex.axis = 1.4, bty = "n", col = "darkseagreen", las = 1)
-  			mtext("Number of shipments", side = 2, line = 4.4, cex = 1.6) 
-			mtext("Number of swine", side = 1, line = 3, cex = 1.6) 
-  			axis(side = 1, at = seq(1, (length(swine.hist$breaks)-1)), 
-  			labels = swine.hist$breaks[-1], cex = 1.5)
-legend("topright", fill = c("darkseagreen", "darkslateblue"), 
-	legend = c("commuter agreement", "ICVI"), bty = "n")
-par(fig = c(0, 1, 0, 0.2), mar = c(0, 6, 0, 2), new = TRUE)
-boxplot(list(cvi2011$NUM_SWINE, canum), cex = 0.4, pch = 19, 
-	col = c("darkslateblue", "darkseagreen"),
-	horizontal = TRUE, ylim = c(0, 6500), axes = FALSE)
+plot(n2$owp ~ n2$OutDegree_Ship)
+cor.test(n2$owp, n2$OutDegree_Ship)
 
+plot(n2$pmh ~ n2$OutDegree_Ship)
+cor.test(n2$pmh, n2$OutDegree_Ship)
 
-canum <- cvi2011$NUM_SWINE
-swine.hist =  hist(canum, plot=FALSE) 
-barplot(swine.hist$counts, width = 1, space = 0,  
-			xlab="", ylim=c(0,max.y+10), ylab="", cex.lab = 1.5, 
-  			cex.axis = 1.4, bty = "n", col = "darkseagreen", las = 1, 
-  			main = "ICVI")
-  			mtext("Number of shipments", side = 2, line = 4.4, cex = 1.6) 
-			mtext("Number of swine", side = 1, line = 3, cex = 1.6) 
-  			axis(side = 1, at = seq(1, (length(swine.hist$breaks)-1)), 
-  			labels = swine.hist$breaks[-1], cex = 1.5)
+plot(n2$bri ~ n2$OutDegree_Ship)
+cor.test(n2$bri, n2$OutDegree_Ship)
+
+plot(n2$bri[n2$OutDegree_Ship < 600] ~ n2$OutDegree_Ship[n2$OutDegree_Ship < 600])
+cor.test(n2$bri[n2$OutDegree_Ship < 600], n2$OutDegree_Ship[n2$OutDegree_Ship < 600])
+
 
 
 ########################################

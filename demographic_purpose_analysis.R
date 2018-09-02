@@ -85,6 +85,7 @@ summary(datared2011$NUM_SWINE)
 wilcox.test(data2010$NUM_SWINE, data2011$NUM_SWINE)
 wilcox.test(data2010$NUM_SWINE, datared2011$NUM_SWINE)
 
+
 #################################################
 ################################################
 # Step 4:  Purpose
@@ -364,9 +365,26 @@ hist(data$wrongness_age[data$wrongness_age>50])
  #total number of shipments- length(data[,1])
  length(data[,1]) - length(data$wrongness_age[data$wrongness_age==0])  # 400 still off... = 6.9% wrong
 
+# how much missing data
+d<- length(data$NUM_AGE_0.2_MONTHS[data$NUM_AGE_0.2_MONTHS > 0 & data$NUM_AGE_2.6_MONTHS > 0 & data$NUM_AGE_6._MONTHS > 0])
+d/ length(data$totalfem)
+
+
 # Figure 3b: Sex  calculate sum of number of swine by year
 ####################################################################
-# no nebraska
+# how much missing data in Num_Male/ Num_Female columns
+data$wrongness_sex <- data$NUM_SWINE - 
+	(data$NUM_MALE + data$NUM_FEMALE)
+data2010$wrongness_sex <- data2010$NUM_SWINE - 
+	(data2010$NUM_MALE+ data2010$NUM_FEMALE)
+data2011$wrongness_sex <- data2011$NUM_SWINE - 
+	(data2011$NUM_MALE + data2011$NUM_FEMALE)
+par(mfrow = c(1, 3))
+hist(data$wrongness_sex)
+hist(data2010$wrongness_sex)
+hist(data2011$wrongness_sex)
+
+# no nebraska (only NUM_MALE/NUM_FEMALE column)
 tapply(data$NUM_MALE, data$SAMPLE_YEAR2, sum)
 tapply(data$NUM_FEMALE, data$SAMPLE_YEAR2, sum)
 
@@ -374,15 +392,7 @@ tapply(data$NUM_FEMALE, data$SAMPLE_YEAR2, sum)
 tapply(data.cvi$NUM_MALE, data.cvi$SAMPLE_YEAR2, sum)
 tapply(data.cvi$NUM_FEMALE, data.cvi$SAMPLE_YEAR2, sum)
 
-# calculates sum of number of gilt, boar, barrow ect. 
-tapply(data$NUM_BOAR, data$SAMPLE_YEAR2, sum)
-tapply(data$NUM_BARROW, data$SAMPLE_YEAR2, sum)
-tapply(data$NUM_GILT, data$SAMPLE_YEAR2, sum)
-tapply(data$NUM_SOW, data$SAMPLE_YEAR2, sum)
-
-# there are 1659 rows with information on either NUM_MALE or NUM_FEMALE; when present, this is also mostly correct. 
-data$wrongness_sex<-data$NUM_SWINE-(data$NUM_MALE+data$NUM_FEMALE)
-
+# how much missing data in Num_boar/barrow ect. 
 # there are 1167 rows with information on either NUM_MALE2 or NUM_FEMALE2; when it is present, it matches NUM_SWINE
 data$NUM_MALE2<-data$NUM_BOAR+data$NUM_BARROW
 data$NUM_FEMALE2<-data$NUM_GILT+data$NUM_SOW
@@ -390,6 +400,12 @@ data$wrongness_sex2<-data$NUM_SWINE-(data$NUM_MALE2+data$NUM_FEMALE2)
 par(mfrow = c(1,2))
 hist(data$wrongness_sex)
 hist(data$wrongness_sex2)
+
+# calculates sum of number of gilt, boar, barrow ect. 
+tapply(data$NUM_BOAR, data$SAMPLE_YEAR2, sum)
+tapply(data$NUM_BARROW, data$SAMPLE_YEAR2, sum)
+tapply(data$NUM_GILT, data$SAMPLE_YEAR2, sum)
+tapply(data$NUM_SOW, data$SAMPLE_YEAR2, sum)
 
 # Decide if we can sum the two characterizations (e.g. people either fill out the male/female column or the boar/barrow ect column):
 data$totalsex<-data$NUM_MALE+data$NUM_FEMALE+ data$NUM_FEMALE2+data$NUM_MALE2
@@ -402,9 +418,16 @@ data$totalmale<-data$NUM_MALE+data$NUM_MALE2
 tapply(data$totalmale, data$SAMPLE_YEAR2, sum)
 
 # Percent of shipmetns reporting sex information
-d<- length(data$totalfem[data$totalmale > 0]) + length(data$totalfem[data$totalfem > 0])
+d<- length(data$totalfem[data$totalmale > 0 & data$totalfem > 0])
 d/ length(data$totalfem)
 
+# Percent by year
+d <- length(data$totalfem[data$totalmale > 0 & 
+	data$totalfem > 0 & data$SAMPLE_YEAR2 == "2010"]) #7.3
+d/ length(data$totalfem[data$SAMPLE_YEAR2 == "2010"])  # 6.3%
+d <- length(data$totalfem[data$totalmale > 0 & 
+	data$totalfem > 0 & data$SAMPLE_YEAR2 == "2011"])
+d/ length(data$totalfem[data$SAMPLE_YEAR2 == "2011"])  # 8.5%
 
 # For supplement
 data.cvi$NUM_MALE2<-data.cvi$NUM_BOAR+ data.cvi$NUM_BARROW

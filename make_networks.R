@@ -61,6 +61,7 @@ data<-data[data$O_ST_FIPS!=data$D_ST_FIPS,]
 # make networks for
 #1) 2010
 data2010=data[data$SAMPLE_YEAR2==2010,]
+data2010 <- data2010[data2010$O_STATE != "NE",]
 #2) 2011 all stats
 data2011=data[data$SAMPLE_YEAR2==2011,]
 #3) 2011, no Nebraska
@@ -110,9 +111,13 @@ datared2011= data2011[data2011$STATE!="NE",]
 		as.matrix(cbind(as.character(datared$O_FIPS), 
 		as.character(datared$D_FIPS))), directed = TRUE)  
 	# not weighted
+	#temp_graph2 = graph.edgelist(el = 
+	#	as.matrix(unique(cbind(as.character(datared$O_FIPS), 
+	#	as.character(datared$D_FIPS)))), directed = TRUE)        
 	temp_graph2 = graph.edgelist(el = 
 		as.matrix(unique(cbind(as.character(datared$O_FIPS), 
-		as.character(datared$D_FIPS)))), directed = TRUE)        
+		as.character(datared$D_FIPS)))), directed = FALSE)
+	temp_graph2 <- simplify(temp_graph2, remove.multiple = TRUE, remove.loops = TRUE)        
 	# weighted by the number of swine	 
 	temp_graph <- set.edge.attribute(temp_graph1, "weight", 
 		value = datared$NUM_SWINE)
@@ -193,7 +198,7 @@ makenetworks(data2011, filename="2011all")
 makenetworks(datared2011, filename="2011noNE")
 
 # network stats only including subset of states 
-datastates <- c(19, 6, 27, 31, 36, 37, 48, 55)  # Iowa=19, TX=48, CA=6, MN=27, NE=31, NY=36, NC=37, WI=55
+datastates <- c(19, 6, 27, 31, 36, 37, 48, 55)  # IA=19,TX=48,CA=6,MN=27,NE=31,NY=36,NC=37,WI=55
 datastatesnoNE <- c(19, 6, 27, 36, 37, 48, 55)
 datasub2010 = data2010[data2010$D_ST_FIPS %in% datastatesnoNE,]
 datasub2010 = datasub2010[datasub2010$O_ST_FIPS %in% datastatesnoNE,]
@@ -203,6 +208,18 @@ datasubred2011 = datasubred2011[datasubred2011$O_ST_FIPS %in% datastatesnoNE,]
 makenetworks(datasub2010, filename = "sub2010")
 makenetworks(datasub2011, filename ="sub2011all")
 makenetworks(datasubred2011, filename ="sub2011noNE")
+
+dens = function(e, n) {
+	2*e / (n * (n-1))
+}
+# subset data
+dens(695, 261)
+dens(600, 248)
+dens(901, 321)
+#full data
+dens(1364, 676)
+dens(1345, 725)
+dens(1709, 809)
 
 #################################################
 # Step 5:  State networks
@@ -232,9 +249,13 @@ make_state_networks = function(datared, filename){
     		as.matrix(cbind(as.character(datared$O_ST_FIPS), 
       	as.character(datared$D_ST_FIPS))), directed = TRUE)
 	# Not weighted
+	# temp_graph2 = graph.edgelist(el = as.matrix(unique(cbind( 
+    #  	as.character(datared$O_ST_FIPS), 
+    #  	as.character(datared$D_ST_FIPS)))), directed = TRUE) 
 	temp_graph2 = graph.edgelist(el = as.matrix(unique(cbind( 
       	as.character(datared$O_ST_FIPS), 
-      	as.character(datared$D_ST_FIPS)))), directed = TRUE) 
+      	as.character(datared$D_ST_FIPS)))), directed = FALSE) 
+	temp_graph2 <- simplify(temp_graph2, remove.multiple = TRUE, remove.loops = TRUE)        
     # Weighted by the number of swine
     temp_graph <- set.edge.attribute(temp_graph1, "weight", 
       		value = datared$NUM_SWINE) 
@@ -307,6 +328,14 @@ make_state_networks(data2011, filename="2011all")
 make_state_networks(datared2011, filename="2011noNE")
 
 # need to hash out ave nearest neighbor degree and net.assortivity.
-#make_state_networks(datasub2010, filename="sub2010")
-#make_state_networks(datasub2011, filename="sub2011all")
-#make_state_networks(datasubred2011, filename="sub2011noNE")
+make_state_networks(datasub2010, filename="sub2010")
+make_state_networks(datasub2011, filename="sub2011all")
+make_state_networks(datasubred2011, filename="sub2011noNE")
+
+dens(175, 48)
+dens(154, 48)
+dens(136, 45)
+
+dens(22, 8)
+dens(17, 7)
+dens(17, 7)

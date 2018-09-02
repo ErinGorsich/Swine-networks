@@ -1391,7 +1391,6 @@ length(df[,1])
 table(df$StateID)
 df <- test[test$Betweenness >= quantile(test$Betweennes, c(0.975))[[1]],]
 table(df$StateID)
-table(df$StateID)
 length(df[,1])
 df
 df <- test[test$Betweenness >= quantile(test$Betweennes, c(0.99))[[1]],]

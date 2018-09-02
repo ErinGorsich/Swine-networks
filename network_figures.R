@@ -134,13 +134,13 @@ data2011 <- data11
 # make networks
 counties <- unique(cbind(c(data2010$O_ST_FIPS, data2010$D_ST_FIPS), c(data2010$O_FIPS, data2010$D_FIPS)))  
 counties <- counties[order(counties[,2]),]
- node.stats <- data.frame(matrix(NA,nrow=length(counties[,1]),
-                             ncol=12,
-                             dimnames=list(NULL, c("StateID","NodeID",
-                             "Unweighted_InDeg","InDegree_Ship","InDegree_Swine", 							 							
-                             "Unweighted_OutDeg","OutDegree_Ship","OutDegree_Swine", 
-                             "TotalDegree_Ship", "TotalDegree_Swine", "Betweenness",
-                             "Transitivity"))))	
+node.stats <- data.frame(matrix(NA,nrow=length(counties[,1]),
+    ncol=12,
+    dimnames=list(NULL, c("StateID","NodeID",
+        "Unweighted_InDeg","InDegree_Ship","InDegree_Swine", 							 							
+        "Unweighted_OutDeg","OutDegree_Ship","OutDegree_Swine", 
+        "TotalDegree_Ship", "TotalDegree_Swine", "Betweenness",
+        "Transitivity"))))	
 node.stats$NodeID <- counties[,2]
 node.stats$StateID <- counties[,1]
 summary(node.stats)  
@@ -209,7 +209,7 @@ for (i in 1:length(name$OutDegreeShip)){
 }
 name$col<-as.character(colmatch$col[match(name$ODbin, colmatch$num)])
 
-tiff('paperdrafts_swine/swine_od_countylevel_2010.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
+tiff('paperdrafts_swine/swine_od_countylevel_2010_test.tiff',res=600,height=90,width=140,units="mm",compression="lzw")
 par(mai=c(1,1,1,3))
 map('county', resolution=0, lwd=0.3, col="dark gray")
 map('county', resolution=0, fill=TRUE, col=name$col, boundary="light gray", lwd=0.3, add=TRUE)

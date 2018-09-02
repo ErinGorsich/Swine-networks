@@ -78,9 +78,9 @@ inv_b2<-get_useful_parts(inv_b)
 op2<-get_useful_parts(op)  # only file with multiple rows per county, have to sum them. 
 op3=data.frame(FIPS=unique(op2$FIPS))
 for (i in 1:length(op3$FIPS)){
-val=op3$FIPS[i]
-tempdf=op2[op2$FIPS==val,]
-op3$newvalue[i]=sum(tempdf$value)
+	val=op3$FIPS[i]
+	tempdf=op2[op2$FIPS==val,]
+	op3$newvalue[i]=sum(tempdf$value)
 }
 
 op_p2<-get_useful_parts(op_p)
