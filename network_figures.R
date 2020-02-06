@@ -145,33 +145,50 @@ node.stats$NodeID <- counties[,2]
 node.stats$StateID <- counties[,1]
 summary(node.stats)  
 
-temp_graph1 <- graph.edgelist(el = as.matrix(cbind(as.character(data2010$O_FIPS), as.character(data2010$D_FIPS))), 
-													directed=TRUE)
-temp_graph2 <- graph.edgelist(el = as.matrix(unique(cbind(as.character(data2010$O_FIPS), as.character(data2010$D_FIPS)))),
-													 directed=TRUE) 
-temp_graph <- set.edge.attribute(temp_graph1,"weight",value = data2010$NUM_SWINE)					
-temp_graph_st <- graph.edgelist(el=as.matrix(cbind(as.character(data2010$O_ST_FIPS), as.character(data2010$D_ST_FIPS))), directed=TRUE)
+temp_graph1 <- graph.edgelist(
+    el = as.matrix(cbind(as.character(data2010$O_FIPS), 
+        as.character(data2010$D_FIPS))), directed=TRUE)
+temp_graph2 <- graph.edgelist(
+    el = as.matrix(unique(cbind(as.character(data2010$O_FIPS), 
+        as.character(data2010$D_FIPS)))), directed=TRUE) 
+temp_graph <- set.edge.attribute(temp_graph1, "weight", 
+    value = data2010$NUM_SWINE)					
+temp_graph_st <- graph.edgelist(
+    el = as.matrix(cbind(as.character(data2010$O_ST_FIPS), 
+        as.character(data2010$D_ST_FIPS))), directed=TRUE)
 
 # Calculate node statistics  
-node.stats$Unweighted_InDeg <- degree(temp_graph2, mode = c("in"))[order(as.numeric(V(temp_graph2)$name))]
-node.stats$Unweighted_OutDeg <- degree(temp_graph2, mode = c("out"))[order(as.numeric(V(temp_graph2)$name))]
-node.stats$InDegree_Ship <- degree(temp_graph, mode = c("in"))[order(as.numeric(V(temp_graph)$name))]
-node.stats$OutDegree_Ship <- degree(temp_graph, mode = c("out"))[order(as.numeric(V(temp_graph)$name))]
-node.stats$TotalDegree_Ship <- node.stats$InDegree_Ship + node.stats$OutDegree_Ship
-node.stats$InDegree_Swine <- graph.strength(temp_graph, mode = c("in"))[order(as.numeric(V(temp_graph)$name))]
-node.stats$OutDegree_Swine <- graph.strength(temp_graph, mode = c("out"))[order(as.numeric(V(temp_graph)$name))]
-node.stats$TotalDegree_Swine <- node.stats$InDegree_Swine + node.stats$OutDegree_Swine
+node.stats$Unweighted_InDeg <- degree(temp_graph2, 
+    mode = c("in"))[order(as.numeric(V(temp_graph2)$name))]
+node.stats$Unweighted_OutDeg <- degree(temp_graph2, 
+    mode = c("out"))[order(as.numeric(V(temp_graph2)$name))]
+node.stats$InDegree_Ship <- degree(temp_graph, 
+    mode = c("in"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$OutDegree_Ship <- degree(temp_graph, 
+    mode = c("out"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$TotalDegree_Ship <- node.stats$InDegree_Ship + 
+    node.stats$OutDegree_Ship
+node.stats$InDegree_Swine <- graph.strength(temp_graph, 
+    mode = c("in"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$OutDegree_Swine <- graph.strength(temp_graph, 
+    mode = c("out"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$TotalDegree_Swine <- node.stats$InDegree_Swine + 
+    node.stats$OutDegree_Swine
 node.stats$Betweenness <- betweenness(temp_graph2)[order(as.numeric(V(temp_graph2)$name))] 
-node.stats$Transitivity <- transitivity(temp_graph,type=c("local"))[order(as.numeric(V(temp_graph)$name))]
+node.stats$Transitivity <- transitivity(temp_graph, 
+    type = c("local"))[order(as.numeric(V(temp_graph)$name))]
 
 #plot
 ctname <- map('county', resolution=0, plot=FALSE)$names
 ctname <- as.matrix(ctname)
 data(county.fips)
-node.stats$COUNTY_NAME_R <- county.fips$polyname[match(node.stats$NodeID, county.fips$fips)]
+node.stats$COUNTY_NAME_R <- county.fips$polyname[match(node.stats$NodeID, 
+    county.fips$fips)]
 name <- data.frame(ctname = ctname, OutDegreeShip = NA, OutDegreeSwine = NA)
-name$OutDegreeShip <- node.stats$OutDegree_Ship[match(name$ctname, node.stats$COUNTY_NAME_R)]
-name$OutDegreeSwine <- node.stats$OutDegree_Swine[match(name$ctname, node.stats$COUNTY_NAME_R)]
+name$OutDegreeShip <- node.stats$OutDegree_Ship[match(name$ctname, 
+    node.stats$COUNTY_NAME_R)]
+name$OutDegreeSwine <- node.stats$OutDegree_Swine[match(name$ctname, 
+    node.stats$COUNTY_NAME_R)]
 name$OutDegreeShip[is.na(name$OutDegreeShip)] <- 0
 name$OutDegreeSwine[is.na(name$OutDegreeSwine)] <- 0
 

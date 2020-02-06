@@ -9,8 +9,8 @@
 ####################################################################
 ####################################################################
 # Outline
-# Step 1:  Set your working directory and install
-# Step 2:  Read in the data and remove/change any wierd things
+# Step 1: Set your working directory and install
+# Step 2: Read in the data and remove/change any wierd things
 # Step 3: Shipment size analyses
 # Step 4: Purpose analyses
 # Step 5: Age

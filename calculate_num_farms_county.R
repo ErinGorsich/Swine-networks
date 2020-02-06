@@ -12,8 +12,7 @@
 # 5) Regression on each year separately (version 1, not used)
 ###############################################
 
- 
- 
+
 ###############################################
 ###############################################
 # 1) Install packages and do preliminary grooming
@@ -48,10 +47,13 @@ data <-data.cvi[ , c("STATE", "SAMPLE_YEAR2", "PURPOSE",
 data <- data[data$PURPOSE != "Slaughter", ]
 data <- data[data$O_FIPS != data$D_FIPS,]  
 data <- data[data$O_ST_FIPS != data$D_ST_FIPS, ]
+
  
 # Subset cvi data by year.
 data10<-data.cvi[data.cvi$SAMPLE_YEAR2=="2010",]
 data11<-data.cvi[data.cvi$SAMPLE_YEAR2=="2011",]
+
+edgelist.st.2010 <- data2010
  
 ###############################################
 ###############################################
@@ -364,7 +366,7 @@ best <- glm(NumCVIFarms ~  state + newvalue + border_ind + state*newvalue,
 						  data = finaldata, family = quasipoisson(link="log"))  
 # In paper
 bestred <- glm(NumCVIFarms ~  state + newvalue + border_ind + state*newvalue, 
-						  data = finaldata[which(fitted(test.mod) < 60), ], family = quasipoisson(link="log"))     
+		data = finaldata[which(fitted(test.mod) < 60), ], family = quasipoisson(link="log"))     
 
 
 par(mfrow = c(1,2))

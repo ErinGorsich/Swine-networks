@@ -29,49 +29,55 @@ library(plyr)      #  plyr helps manipulate dataframes
 #################################################
 # Step 2:  Read in the data and remove/change any wierd things
 #################################################
-dat = read.csv("Swine_cvi_final.csv")
-dat = dat[!is.na(dat$NUM_SWINE),]  #-1
-dat = dat[dat$NUM_SWINE>0,] # -13
-dat = dat[!is.na(dat$SAMPLE_YEAR2),]  #-38 #Clay added new col for year
-dat = dat[!is.na(dat$O_FIPS),]
-dat = dat[!is.na(dat$D_FIPS),]
-dat = dat[dat$NUM_SWINE>0,]
+dat <- read.csv("Swine_cvi_final.csv")
+dat <- dat[!is.na(dat$NUM_SWINE), ]  #-1
+dat <- dat[dat$NUM_SWINE>0, ] # -13
+dat <- dat[!is.na(dat$SAMPLE_YEAR2), ]  #-38 #Clay added new col for year
+dat <- dat[!is.na(dat$O_FIPS), ]
+dat <- dat[!is.na(dat$D_FIPS), ]
+dat <- dat[dat$NUM_SWINE>0, ]
 
 summary(dat)
 
 # make a new column of 1s that represents the number of shipments
-dat$MOVE <-1
+dat$MOVE <- 1
 
-dat<-dat[, c("STATE", "SAMPLE_YEAR2", "PURPOSE", 
-	"NUM_SWINE", "NUM_BOAR", "NUM_BARROW", "NUM_GILT", 
-	"NUM_SOW", "NUM_AGE_0.2_MONTHS", 
-	"NUM_AGE_2.6_MONTHS", "NUM_AGE_6._MONTHS", 
-	"NUM_MALE", "NUM_FEMALE", "D_STATE", "D_FIPS_X",
-	"D_FIPS_Y", "O_STATE", "D_FIPS", "O_FIPS", 
+dat <- dat[ , c("STATE", "SAMPLE_YEAR2", "PURPOSE", "NUM_SWINE", "NUM_BOAR", 
+    "NUM_BARROW", "NUM_GILT", "NUM_SOW", "NUM_AGE_0.2_MONTHS", 
+	"NUM_AGE_2.6_MONTHS", "NUM_AGE_6._MONTHS", "NUM_MALE", "NUM_FEMALE", 
+    "D_STATE", "D_FIPS_X", "D_FIPS_Y", "O_STATE", "D_FIPS", "O_FIPS", 
 	"O_ST_FIPS", "D_ST_FIPS")]
 summary(dat)
 
 # Proxy for non-slaughter, out-of state shipments!
-data = dat[dat$PURPOSE != "Slaughter",]
-data<-data[!is.na(data$D_FIPS),]
-data<-data[data$O_FIPS!=data$D_FIPS,]  # REMOVE INTRASTATE SHIPMENTS!
-length(data[data$O_ST_FIPS==data$D_ST_FIPS,])
-data<-data[data$O_ST_FIPS!=data$D_ST_FIPS,]
+data <- dat[dat$PURPOSE != "Slaughter",]
+data <- data[!is.na(data$D_FIPS), ]
+data <- data[data$O_FIPS != data$D_FIPS,]  # REMOVE INTRASTATE SHIPMENTS!
+length(data[data$O_ST_FIPS==data$D_ST_FIPS, ])
+data <- data[data$O_ST_FIPS != data$D_ST_FIPS,]
 
-# make networks for
+# check confused origin/destinaiton locations
+table(data$D_ST_FIPS[data$D_STATE == "IA"])
+head(data[data$D_STATE == "IA" & data$D_ST_FIPS != "19", ])  # FIPS CODES ARE OK!
+table(data$D_ST_FIPS[data$D_STATE == "MN"])
+head(data[data$D_STATE == "MN" & data$D_ST_FIPS != "27", ])  # FIPS CODES ARE OK!
+table(data$D_ST_FIPS[data$D_STATE == "IN"])
+head(data[data$D_STATE == "IN" & data$D_ST_FIPS != "18", ])  # FIPS CODES ARE OK!
+
+# Separate dataset by year
 #1) 2010
-data2010=data[data$SAMPLE_YEAR2==2010,]
-data2010 <- data2010[data2010$O_STATE != "NE",]
+data2010 <- data[data$SAMPLE_YEAR2==2010, ]
+data2010 <- data2010[data2010$O_STATE != "NE", ]
 #2) 2011 all stats
-data2011=data[data$SAMPLE_YEAR2==2011,]
+data2011 <- data[data$SAMPLE_YEAR2==2011, ]
 #3) 2011, no Nebraska
-datared2011= data2011[data2011$STATE!="NE",]
+datared2011 <- data2011[data2011$STATE != "NE", ]
 
 
 #################################################
 # Step 3:  Make Networks, function to apply to each subset of the data 
 #################################################
- makenetworks<-function(datared, filename){
+makenetworks = function(datared, filename){
 	#############################################
 	# Input: datared= dataset used to make network.  
 	# Must have columns from the main swine spreadsheet. 
@@ -80,41 +86,41 @@ datared2011= data2011[data2011$STATE!="NE",]
 	# Output: 2 spreadsheets, net_stats with the 
 	# network properties and node_stats with the node properties	
 	###############################################
- 	counties = unique(cbind(c(datared$O_ST_FIPS, 
+ 	counties <- unique(cbind(c(datared$O_ST_FIPS, 
  		datared$D_ST_FIPS), c(datared$O_FIPS, datared$D_FIPS))) 
- 	counties = counties[order(counties[,2]),]
+ 	counties <- counties[order(counties[,2]), ]
 
-	# this makes some empty dataframes that we will 
-	# later fill with information;
- 	node.stats = data.frame(matrix(NA, nrow = length(counties[,1]),
+	# this makes some empty dataframes that we will fill later
+ 	node.stats <- data.frame(matrix(NA, 
+ 	    nrow = length(counties[,1]),l
 		ncol = 18,
-		dimnames = list(NULL, c("StateID","NodeID",
-		"Unweighted_InDeg","InDegree_Ship","InDegree_Swine", 		"Unweighted_OutDeg","OutDegree_Ship","OutDegree_Swine",
-		"Unweighted_TotalDegree", "TotalDegree_Ship", 
-		"TotalDegree_Swine", "Betweenness", "Transitivity", 
-		"AveNearNeighDeg", "AveNearNeighDeg_Ship", 
-		"AveNearNeighDeg_Swine", "StrongClusters","WeakClusters"))))
-	net.stats = data.frame(matrix(0, nrow = 1, ncol = 13,
+		dimnames = list(NULL, c("StateID","NodeID", "Unweighted_InDeg",
+		    "InDegree_Ship", "InDegree_Swine", "Unweighted_OutDeg", 
+		    "OutDegree_Ship", "OutDegree_Swine", "Unweighted_TotalDegree", 
+		    "TotalDegree_Ship", "TotalDegree_Swine", "Betweenness", 
+		    "Transitivity", "AveNearNeighDeg", "AveNearNeighDeg_Ship", 
+    		"AveNearNeighDeg_Swine", "StrongClusters","WeakClusters"))))
+ 	
+	net.stats <- data.frame(matrix(0, 
+	    nrow = 1, 
+	    ncol = 13,
 		dimnames = list(NULL, c("NumNodes", "NumEdges", 
-		"NumEdges_unwt", "Diameter", "GSCCsize","GSCCdiameter", 		
-		"GWCCsize","GWCCdiameter", "Reciprocity", "Assortativity",
-		"Assortativity_Ship", "Assortativity_Swine", 
-		"GlobalTransitivity"))))
+		    "NumEdges_unwt", "Diameter", "GSCCsize","GSCCdiameter", 		
+		    "GWCCsize","GWCCdiameter", "Reciprocity", "Assortativity",
+		    "Assortativity_Ship", "Assortativity_Swine", 
+		    "GlobalTransitivity"))))
 
 	# Calculate the pieces to fill node.stats
-	node.stats$NodeID = counties[,2]
-	node.stats$StateID = counties[,1]
+	node.stats$NodeID <- counties[,2]
+	node.stats$StateID <- counties[,1]
 
 	# Make network objects
 	# weighted by number of shipments
-	temp_graph1 = graph.edgelist(el = 
+	temp_graph1 <- graph.edgelist(el = 
 		as.matrix(cbind(as.character(datared$O_FIPS), 
 		as.character(datared$D_FIPS))), directed = TRUE)  
 	# not weighted
-	#temp_graph2 = graph.edgelist(el = 
-	#	as.matrix(unique(cbind(as.character(datared$O_FIPS), 
-	#	as.character(datared$D_FIPS)))), directed = TRUE)        
-	temp_graph2 = graph.edgelist(el = 
+	temp_graph2 <- graph.edgelist(el = 
 		as.matrix(unique(cbind(as.character(datared$O_FIPS), 
 		as.character(datared$D_FIPS)))), directed = FALSE)
 	temp_graph2 <- simplify(temp_graph2, remove.multiple = TRUE, remove.loops = TRUE)        
@@ -122,30 +128,30 @@ datared2011= data2011[data2011$STATE!="NE",]
 	temp_graph <- set.edge.attribute(temp_graph1, "weight", 
 		value = datared$NUM_SWINE)
 
-	# Calculate node statistics  
-	node.stats$Unweighted_InDeg = degree(
+	# Calculate node statistics with igraph
+	node.stats$Unweighted_InDeg <- degree(
 		temp_graph2,mode=c("in"))[order(as.numeric(V(temp_graph2)$name))]
-	node.stats$Unweighted_OutDeg = degree(
+	node.stats$Unweighted_OutDeg <- degree(
 		temp_graph2,mode=c("out"))[order(as.numeric(V(temp_graph2)$name))]
 	node.stats$Unweighted_TotalDegree = node.stats$Unweighted_InDeg + 
 		node.stats$Unweighted_OutDeg
-    node.stats$InDegree_Ship = degree(
-    		temp_graph,mode=c("in"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$OutDegree_Ship = degree(
+    node.stats$InDegree_Ship <- degree(
+    	temp_graph,mode=c("in"))[order(as.numeric(V(temp_graph)$name))]
+    node.stats$OutDegree_Ship <- degree(
     	temp_graph,mode=c("out"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$TotalDegree_Ship = node.stats$InDegree_Ship + 
-    		node.stats$OutDegree_Ship
-    node.stats$InDegree_Swine = graph.strength(temp_graph, 
-    		mode = c("in"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$OutDegree_Swine = graph.strength(
-    		temp_graph,mode=c("out"))[order(as.numeric(V(temp_graph)$name))]
-    node.stats$TotalDegree_Swine = node.stats$InDegree_Swine + 
-    		node.stats$OutDegree_Swine
-    node.stats$Betweenness = betweenness(
-    		temp_graph2)[order(as.numeric(V(temp_graph2)$name))] 
-	node.stats$Transitivity = transitivity(
+    node.stats$TotalDegree_Ship <- node.stats$InDegree_Ship + 
+    	node.stats$OutDegree_Ship
+    node.stats$InDegree_Swine <- graph.strength(temp_graph, 
+    	mode = c("in"))[order(as.numeric(V(temp_graph)$name))]
+    node.stats$OutDegree_Swine <- graph.strength(
+    	temp_graph,mode=c("out"))[order(as.numeric(V(temp_graph)$name))]
+    node.stats$TotalDegree_Swine <- node.stats$InDegree_Swine + 
+    	node.stats$OutDegree_Swine
+    node.stats$Betweenness <- betweenness(
+    	temp_graph2)[order(as.numeric(V(temp_graph2)$name))] 
+	node.stats$Transitivity <- transitivity(
 		temp_graph,type = c("local"))[order(as.numeric(V(temp_graph)$name))]
- 	node.stats$AveNearNeighDeg = graph.knn(
+ 	node.stats$AveNearNeighDeg <- graph.knn(
  		simplify(temp_graph2))$knn[order(
  		as.numeric(V(simplify(temp_graph2))$name))]
  	#node.stats$AveNearNeighDeg_Ship= graph.knn(temp_graph1$knn
@@ -153,35 +159,35 @@ datared2011= data2011[data2011$STATE!="NE",]
  	#node.stats$AveNearNeighDeg_Swine= graph.knn(
  	# temp_graph,weights=E(temp_graph)$weight)$knn
  	#	[order(as.numeric(V(temp_graph)$name))]
-	temp.strong = clusters(temp_graph2, mode = c("strong"))
-	temp.weak = clusters(temp_graph2, mode = c("weak"))    
-	node.stats$StrongClusters = temp.strong$membership[
+	temp.strong <- clusters(temp_graph1, mode = c("strong"))
+	temp.weak <- clusters(temp_graph2, mode = c("weak"))    
+	node.stats$StrongClusters <- temp.strong$membership[
 		order(as.numeric(V(temp_graph)$name))] + 1
-	node.stats$WeakClusters = temp.weak$membership[
+	node.stats$WeakClusters <- temp.weak$membership[
 		order(as.numeric(V(temp_graph)$name))] + 1
 
 	# Calculate network statistics
-    net.stats$NumNodes = length(node.stats$NodeID)
-    net.stats$NumEdges = ecount(temp_graph)  #wt
- 	net.stats$NumEdges_unwt = ecount(temp_graph2)
- 	net.stats$Diameter = diameter(temp_graph1)
-	net.stats$Reciprocity = reciprocity(temp_graph)
+    net.stats$NumNodes <- length(node.stats$NodeID)
+    net.stats$NumEdges <- ecount(temp_graph)  #wt
+ 	net.stats$NumEdges_unwt <- ecount(temp_graph2)
+ 	net.stats$Diameter <- diameter(temp_graph1)
+	net.stats$Reciprocity <- reciprocity(temp_graph)
 	#net.stats$Assortativity_Ship = cor(
 	#	node.stats$TotalDegree_Ship,node.stats$AveNearNeighDeg_Ship)
 	#net.stats$Assortativity_Swine = cor(
 	#	node.stats$TotalDegree_Swine,node.stats$AveNearNeighDeg_Swine)
-	net.stats$Assortivity = cor(
+	net.stats$Assortivity <- cor(
 		node.stats$Unweighted_TotalDegree, node.stats$AveNearNeighDeg)
 	net.stats$GlobalTransitivity = transitivity(temp_graph,type = c("global"))
-	 temp.nodes.strong = which(temp.strong$membership == which.max(
+	 temp.nodes.strong <- which(temp.strong$membership == which.max(
 	 	temp.strong$csize))
-     temp.nodes.weak = which(temp.weak$membership == which.max(
+     temp.nodes.weak <- which(temp.weak$membership == which.max(
      	temp.weak$csize)) 
-    net.stats$GSCCsize = length(temp.nodes.strong)
-    net.stats$GSCCdiameter = diameter(
+    net.stats$GSCCsize <- length(temp.nodes.strong)
+    net.stats$GSCCdiameter <- diameter(
     		induced.subgraph(temp_graph2,v=temp.nodes.strong))
-    net.stats$GWCCsize = length(temp.nodes.weak)
-    net.stats$GWCCdiameter = diameter(
+    net.stats$GWCCsize <- length(temp.nodes.weak)
+    net.stats$GWCCdiameter <- diameter(
     		induced.subgraph(temp_graph2, v = temp.nodes.weak))  # check
 
 	# save the results. 
@@ -232,7 +238,8 @@ make_state_networks = function(datared, filename){
  	node.stats = data.frame(matrix(NA, nrow = length(counties),
 		ncol=18,
 		dimnames = list(NULL, c("StateID","NodeID",
-		"Unweighted_InDeg","InDegree_Ship","InDegree_Swine", 		"Unweighted_OutDeg","OutDegree_Ship","OutDegree_Swine",
+		"Unweighted_InDeg","InDegree_Ship","InDegree_Swine", 		
+		"Unweighted_OutDeg","OutDegree_Ship","OutDegree_Swine",
 		"Unweighted_TotalDegree", "TotalDegree_Ship", 
 		"TotalDegree_Swine", "Betweenness", "Transitivity", 
 		"AveNearNeighDeg", "AveNearNeighDeg_Ship", 
@@ -249,7 +256,7 @@ make_state_networks = function(datared, filename){
     		as.matrix(cbind(as.character(datared$O_ST_FIPS), 
       	as.character(datared$D_ST_FIPS))), directed = TRUE)
 	# Not weighted
-	# temp_graph2 = graph.edgelist(el = as.matrix(unique(cbind( 
+	#temp_graph3 = graph.edgelist(el = as.matrix(unique(cbind( 
     #  	as.character(datared$O_ST_FIPS), 
     #  	as.character(datared$D_ST_FIPS)))), directed = TRUE) 
 	temp_graph2 = graph.edgelist(el = as.matrix(unique(cbind( 
@@ -286,7 +293,7 @@ make_state_networks = function(datared, filename){
 		temp_graph, type = c("local"))[order(as.numeric(V(temp_graph)$name))]
 	node.stats$AveNearNeighDeg = graph.knn(
 		temp_graph2)$knn[order(as.numeric(V(temp_graph2)$name))]
-	temp.strong = clusters(temp_graph2, mode = c("strong"))
+	temp.strong = clusters(temp_graph1, mode = c("strong"))  #####
 	temp.weak = clusters(temp_graph2, mode=c("weak"))  
 	node.stats$StrongClusters = temp.strong$membership[
 		order(as.numeric(V(temp_graph)$name))] + 1
@@ -339,3 +346,99 @@ dens(136, 45)
 dens(22, 8)
 dens(17, 7)
 dens(17, 7)
+
+# Edgelist for supplement / check table 2
+table(data2010$O_ST_FIPS)
+get_info = function(df) {
+    head <- sum(df$NUM_SWINE)
+    med <- median(df$NUM_SWINE)
+    max <- max(df$NUM_SWINE)
+    breeding <- length(df$PURPOSE[df$PURPOSE == "Breeding"])/length(df$PURPOSE)
+    feeding <- length(df$PURPOSE[df$PURPOSE %in% c(
+        "Feeding", "Feeding/Grazing", "Production")])/length(df$PURPOSE)
+    sale <- length(df$PURPOSE[df$PURPOSE == "Sale"])/length(df$PURPOSE)
+    show <- length(df$PURPOSE[df$PURPOSE == "Show/Exhibition"])/length(df$PURPOSE)
+    return(list(head, med, max, breeding, feeding, sale, show))
+}
+# CALIFORNIA
+get_info(data2010[data2010$O_ST_FIPS == 6, ])
+get_info(data2011[data2011$O_ST_FIPS == 6, ])
+# IOWA
+get_info(data2010[data2010$O_ST_FIPS == 19, ])
+get_info(data2011[data2011$O_ST_FIPS == 19, ])
+# MINNESOTA
+get_info(data2010[data2010$O_ST_FIPS == 27, ])
+get_info(data2011[data2011$O_ST_FIPS == 27, ])
+# NORTH CAROLINA
+get_info(data2010[data2010$O_ST_FIPS == 37, ])
+get_info(data2011[data2011$O_ST_FIPS == 37, ])
+# NEBRASKA
+get_info(data2011[data2011$O_ST_FIPS == 31, ])
+# NEW YORK
+get_info(data2010[data2010$O_ST_FIPS == 36, ])
+get_info(data2011[data2011$O_ST_FIPS == 36, ])
+# TEXAS
+get_info(data2010[data2010$O_ST_FIPS == 48, ])
+get_info(data2011[data2011$O_ST_FIPS == 48, ])
+# Wisconsin
+get_info(data2010[data2010$O_ST_FIPS == 55, ])
+get_info(data2011[data2011$O_ST_FIPS == 55, ])
+
+
+# Make edgelist
+names <- read.csv("~/Dropbox/Swine/statenames_abbreviations_Rassociate.csv")
+
+data10 <- data2010
+data11 <- data2011
+ cols <- c('O_ST_FIPS', "D_ST_FIPS", 'O_STATE', 'D_STATE')
+data10[cols] <- sapply(data10[cols], as.character)
+data11[cols] <- sapply(data11[cols], as.character)
+
+el <- unique(cbind(data10[,"O_ST_FIPS"], data10[,"D_ST_FIPS"]))
+edgelist.st.2010 <- data.frame(
+    origin.state = rep("", length(el[,1])),
+    destination.state = rep("", length(el[,1])), 
+    origin.fips = el[, 1], 
+    destination.fips = el[ , 2],
+    number.shipments = rep(0, length(el[, 1])), 
+    number.swine = rep(0, length(el[, 1])))
+edgelist.st.2010$origin.state <- names$stab[match(edgelist.st.2010$origin.fips, 
+    names$ST_FIPS)]
+edgelist.st.2010$destination.state <-  names$stab[match(edgelist.st.2010$destination.fips, names$ST_FIPS)]
+table(edgelist.st.2010$origin.fips); table(edgelist.st.2010$origin.state)
+table(list(edgelist.st.2010$origin.fips, edgelist.st.2010$origin.state))
+table(list(edgelist.st.2010$destination.fips, edgelist.st.2010$destination.state))
+
+
+el <- unique(cbind(data11[,"O_ST_FIPS"], data11[,"D_ST_FIPS"]))
+edgelist.st.2011 <- data.frame(
+    origin.state = rep("", length(el[ ,1])),
+    destination.state = rep("", length(el[ ,1])), 
+    origin.fips = el[, 1], 
+    destination.fips = el[ , 2],
+    number.shipments = rep(0, length(el[, 1])), 
+    number.swine = rep(0, length(el[, 1])))
+
+edgelist.st.2011$origin.state <- names$stab[match(edgelist.st.2011$origin.fips,
+    names$ST_FIPS)]
+edgelist.st.2011$destination.state <-  names$stab[match(
+    edgelist.st.2011$destination.fips, names$ST_FIPS)]
+
+data10$MOVE <- 1
+for (i in 1:length(edgelist.st.2010[ ,1])) {
+    temp <- data10[c(data10$O_ST_FIPS == edgelist.st.2010$origin.fips[i] & data10$D_ST_FIPS == edgelist.st.2010$destination.fips[i]), ]
+    edgelist.st.2010$number.shipments[i] <- sum(temp$MOVE)
+    edgelist.st.2010$number.swine[i] <- sum(temp$NUM_SWINE)
+    rm (temp)  
+}
+
+data11$MOVE <- 1
+for (i in 1:length(edgelist.st.2011[ ,1])) {
+    temp <- data11[c(data11$O_ST_FIPS == edgelist.st.2011$origin.fips[i] & data11$D_ST_FIPS == edgelist.st.2011$destination.fips[i]), ]
+    edgelist.st.2011$number.shipments[i] <- sum(temp$MOVE)
+    edgelist.st.2011$number.swine[i] <- sum(temp$NUM_SWINE)
+    rm (temp)
+}
+
+write.csv(edgelist.st.2010, "Gorsich_Miller_et_al_state_edgelist_2010.csv")
+write.csv(edgelist.st.2011, "Gorsich_Miller_et_al_state_edgelist_2011.csv")
