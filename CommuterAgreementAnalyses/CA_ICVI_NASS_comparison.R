@@ -3,26 +3,23 @@
 # Outline
 ########################################
 ########################################
-# 1) Load Data
-# 2) Calculate correlation between terms, choose covariates
+# 1) Load Shipment Data
+# 2) Load NASS Data
+# 3) Calculate correlations
 
 ########################################
 ########################################
-setwd("~/Documents/post-doc/Swine")
+setwd("~/Google Drive/Warwick/students/Callum/Swine")
 
 ########################################
 ########################################
-# 1) Load Data
+# 1) Load Shipment Data
 ########################################
 ########################################
-
-# Commuter Agreement Number of Shipments - Network statistics
-########################################
-ca <- read.csv("~/Documents/post-doc/Swine/CommuterAgreementAnalyses/node_stats_swine_CA.csv")
 
 # Raw commuter agreement data
 ########################################
-caraw <-read.csv("~/Documents/post-doc/Swine/CommuterAgreementAnalyses/SWINE Commuter Data - FTP site originals/Swine_Commuter_Data_31May2017_02.csv")
+caraw <- read.csv("CommuterAgreementAnalyses/SWINE Commuter Data - FTP site originals/Swine_Commuter_Data_31May2017_02.csv")
 caraw <- caraw[caraw$Year == "2014",]
 caraw <- caraw[!is.na(caraw$D.state),]  # 321 removed
 caraw <- caraw[!is.na(caraw$O.state),]  # 5 removed
@@ -31,15 +28,13 @@ caraw$O.state <- as.character(caraw$O.state)
 caraw$D.state <- as.character(caraw$D.state)
 caraw$D.state[caraw$D.FIPS == 27045 & !is.na(caraw$D.FIPS)] <- "MN"
 
-statefips <- read.csv("~/Documents/post-doc/2009-2011 comparison final/county_centroid_coordinates.csv")
+statefips <- read.csv("county_centroid_coordinates.csv")
 statefips$stab <- as.character(statefips$stab)
 caraw$O.state.FIPS <- statefips$ST_FIPS[match(caraw$O.state, statefips$stab)]
 caraw$D.state.FIPS <-  statefips$ST_FIPS[match(caraw$D.state, statefips$stab)]
-caraw <- caraw[!(caraw$O.state.FIPS == caraw$D.state.FIPS),]   #removed 7, now at 10030 records
-
-# ICVI number of shipments
-########################################
-cvi <- read.csv("~/Documents/post-doc/Swine/node_stats_2011all.csv")
+caraw <- caraw[!(caraw$O.state.FIPS == caraw$D.state.FIPS),]   # removed 7
+caraw <- caraw[!is.na(caraw$O.FIPS), ]
+caraw <- caraw[!is.na(caraw$D.FIPS), ]
 
 # Raw ICVI data
 ########################################
@@ -68,71 +63,195 @@ data.cvi <- data.cvi[!is.na(data.cvi$D_FIPS),]
  
 cvi2011 <- data.cvi[data.cvi$SAMPLE_YEAR2=="2011",]
 
-# NASS Co-variates 
 ########################################
-##################
+########################################
+# 3) NASS Co-variates 
+########################################
+########################################
+
 ## functions used
-newcol<-NA
-standardize<-function(column){
+newcol <- NA
+standardize = function(column){
 	for (i in 1:length(column)){
-	newcol[i]<-(column[i]-mean(column))/sd(column)
+	    newcol[i] <- (column[i] - mean(column)) / sd(column)
 }
 	return(newcol)
 }
 
 newdataframe<-NA
-get_useful_parts<-function(dataframe){
+get_useful_parts = function(dataframe){
 	##########################
 	### This function takes a dataframe.  It
-	#  1) extracts the useful columns (value, State/County ID/ Value),
-	# 	2) makes a new column, valsd, containing standardized version of Value, 3) creates a new column,
-	# FIPS= complete county ID that should match our datasets, and 4) returs a clean dataset.  
+	# 1) extracts the useful columns (value, State/County ID/ Value),
+	# 2) makes a new col=valsd, containing standardized version of Value, 
+    # 3) creates a new column = FIPS= complete county ID  
 	### Ins/Outs
-	# Input= dataframe directly downloaded from NASS
-	# Name as output an INFORMATIVE name!!!!  I do not keep track of what things are what!
+	# Input= dataframe directly downloaded from NASS; Output = clean df
 	##########################
 
+    # domain = TOTAL - in case there are multiple outputs in the file
+    dataframe <- dataframe[dataframe$Domain == "TOTAL",]
+    
 	# Clean dataframe by removing NAs
-	dataframe<-dataframe[dataframe$Geo.Level=="COUNTY",]
-	dataframe<-dataframe[!is.na(dataframe$County.ANSI),]  
-	# Get rid of commas in the Value column, standardize the Value, put in new column, "valsd"
-	dataframe$Value<-as.character(dataframe$Value)
-	dataframe$Value2<-as.numeric(gsub(",", "", dataframe$Value))
-	dataframe<-dataframe[!is.na(dataframe$Value2),]  # repeat, some NAs not removed earlier
-	#dataframe$valsd<-standardize(dataframe$Value2)
-	dataframe$FIPS<-NA
+	dataframe <- dataframe[dataframe$Geo.Level=="COUNTY",]
+	dataframe <- dataframe[!is.na(dataframe$County.ANSI),] 
+	
+	# Get rid of commas in the Value col, standardize, put in new col "valsd"
+	dataframe$Value <- as.character(dataframe$Value)
+	dataframe$Value[dataframe$Value == " (D)"] <- -200  # assign censored -200!
+	dataframe$Value2 <- as.numeric(gsub(",", "", dataframe$Value))
+	dataframe$FIPS <- NA
+	
 	# create FIPS column, that merges the StateID and column ID
 	for (i in 1:length(dataframe[,1])){
-		if (dataframe$County.ANSI[i]<10) {
-		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="00")
+		if (dataframe$County.ANSI[i] < 10) {
+		dataframe$FIPS[i] <- paste(
+		    dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep = "00")
 	}
-	else if (dataframe$County.ANSI[i]<100 & dataframe$County.ANSI[i]>=10){
-		dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="0")
+	else if (dataframe$County.ANSI[i] < 100 & dataframe$County.ANSI[i] >= 10){
+		dataframe$FIPS[i] <- paste(
+		    dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep = "0")
 	}
-	else {dataframe$FIPS[i]<-paste(dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep="")
+	else {dataframe$FIPS[i] <- paste(
+	    dataframe$State.ANSI[i], dataframe$County.ANSI[i], sep = "")
 		}	
 	}
+	
 	# Subset and rename things so it is easier to work with
-	newdataframe<- dataframe[,colnames(dataframe) %in% c("Year", "State.ANSI", "County.ANSI", "Value2", "FIPS")]
-	new= data.frame(FIPS= newdataframe$FIPS, year= newdataframe$Year, stateFIPS=newdataframe$State.ANSI, countyFIPS=newdataframe$County.ANSI, value=newdataframe$Value2)
+	newdataframe <- dataframe[ , colnames(dataframe) %in% c(
+	    "Year", "State.ANSI", "County.ANSI", "Value2", "FIPS")]
+	new <- data.frame(FIPS = newdataframe$FIPS, year = newdataframe$Year, 
+	                  stateFIPS = newdataframe$State.ANSI, 
+	                  countyFIPS = newdataframe$County.ANSI, 
+	                  value = newdataframe$Value2)
 	return(new)
 }
 
+# File read-in
+########################################
+# Operations 
+owi <- get_useful_parts(
+    read.csv("NASS/2012_NASS_HOGS_Operations_with_inventory.csv"))
+owbreeding <- get_useful_parts(
+    read.csv("NASS/*2012_NASS_HOGS_Operations_with_breeding_inventory.csv"))
+owproduction <- get_useful_parts(
+    read.csv("NASS/2012_NASS_HOGS_Operations_with_production.csv"))
+owsales <- get_useful_parts(
+    read.csv("NASS/2012_NASS_HOGS_Operations_with_sales.csv"))
+owmarket <- get_useful_parts(
+    read.csv("NASS/2012_NASS_HOGS_Operations_with_market_inventory.csv"))
 
-source('~/GitHub/Swine-networks/clean_NASS_data.R', chdir = TRUE)
-n <- read.csv("~/Documents/post-doc/Swine/NASS/NASS_2012_Hogs_county_level_data_REFORMATTED.csv")
-colnames(n) <- c("fips", "ows", "smd", "smh", "owp", "pmh", "inv", "owi", "bri", "boi", "mai", "moi")
+# Inventory (warnings ok)
+inv <- get_useful_parts(read.csv("NASS/*2012_NASS_HOGS_Inventory.csv"))
+invbreeding <- get_useful_parts(
+    read.csv("NASS/*2012_NASS_HOGS_Inventory_breeding.csv"))
+invproduction <- get_useful_parts(
+    read.csv("NASS/*2012_NASS_HOGS_Inventory_of_production.csv"))
+invmarket <- get_useful_parts(
+    read.csv("NASS/2012_NASS_HOGS_Inventory_market.csv"))
 
-#inv_p<-read.csv("~/Documents/post-doc/Swine/NASS/*2012_NASS_HOGS_Inventory_of_production.csv")
-#inv_p<-inv_p[inv_p$Year=="2012",]
-#inv_p2<-get_useful_parts(inv_p)
-#n$inp <- inv_p2$value[match( n$fips, inv_p2$FIPS)]
+files <- list(owi = owi, owbreeding = owbreeding, owproduction = owproduction, 
+              owsales = owsales, owmarket = owmarket, inv = inv, 
+              invbreeding = invbreeding, invproduction = invproduction, 
+              invmarket = invmarket)
+newdf <- data.frame(
+    FIPS = unique(c(files[[1]][,1], files[[2]][,1], files[[3]][,1], 
+                    files[[4]][,1], files[[5]][,1], files[[6]][,1],
+                    files[[7]][,1], files[[8]][,1], files[[9]][,1]))
+)
+i <- 2
+for (file in files){
+    newdf[, i] <- file$value[match(newdf$FIPS, file$FIPS, nomatch = NA)]
+    i <- i + 1
+}
+colnames(newdf) <- c("FIPS", names(files))
 
-n2 <- read.csv("~/Documents/post-doc/Swine/NASS/CA_Node Stats_County level.csv")
-colnames(n2)[22:32] <- c("ows", "smd", "smh", "owp", "pmh", "inv", "owi", "bri", "boi", "mai", "moi")
-write.csv(n2, "NASS/CA_Node Stats_County level.csv")  # sent to MATT to do single correlations
+# Note OWI, sales, market, (to a lesser extent production) were all highly correlated. 
+# % breeding or total is useful because stratified with total
+pairs(newdf[ ,2:6], pch = 19, cex = 0.7)
 
-fips <- read.csv("~/Documents/post-doc/2009-2011 comparison final/paperdrafts2- MxSim/MxCattle_overview/county-fips.csv")
+# inventory, market inventory (to a lesser extent production) are strongly 
+pairs(newdf[ ,c(2:3, 7:10)], pch = 19, cex = 0.7)
+
+usedf <- newdf[ , c('FIPS', "owi", "owbreeding", "owproduction", 
+                    "inv", "invbreeding", "invproduction")]
+pairs(usedf[2:7])
+
+########################################
+########################################
+# 3) Analysis
+########################################
+########################################
+# Correlations
+caraw$move <- 1
+caraw$O.FIPS <- as.character(caraw$O.FIPS) 
+caraw$D.FIPS <- as.character(caraw$D.FIPS)
+cvi2011$O_FIPS <- as.character(cvi2011$O_FIPS) 
+cvi2011$D_FIPS <- as.character(cvi2011$D_FIPS)
+usedf$ICVIin <- NA; usedf$ICVIout <- NA
+
+for (i in 1:length(usedf[,1])){
+    fips <- usedf$FIPS[i]
+    usedf$ICVIin[i] <- sum(cvi2011$MOVE[cvi2011$D_FIPS == fips])
+    usedf$ICVIout[i] <- sum(cvi2011$MOVE[cvi2011$O_FIPS == fips])
+    usedf$headICVIin[i] <- sum(cvi2011$NUM_SWINE[cvi2011$D_FIPS == fips])
+    usedf$headICVIout[i] <- sum(cvi2011$NUM_SWINE[cvi2011$O_FIPS == fips])
+
+    usedf$CAin[i] <- sum(caraw$move[caraw$D.FIPS == fips])
+    usedf$CAout[i] <- sum(caraw$move[caraw$O.FIPS == fips])
+    usedf$headCAin[i] <- sum(caraw$NUM.SHIPPED[caraw$D.FIPS == fips])
+    usedf$headCAout[i] <- sum(caraw$NUM.SHIPPED[caraw$O.FIPS == fips]) 
+}
+
+usedf$totICVI <- usedf$ICVIin + usedf$ICVIout
+usedf$headtotICVI <- usedf$headICVIin + usedf$headICVIout 
+usedf$totCA <- usedf$CAin + usedf$CAout
+usedf$headtotCA <- usedf$headCAin + usedf$headCAout
+usedf$tot <- usedf$totICVI + usedf$totCA
+usedf$tothead <- usedf$headtotICVI + usedf$headtotCA
+
+usedf$totin <- usedf$ICVIin + usedf$CAin
+usedf$headtotin <- usedf$headICVIin + usedf$headCAin
+usedf$totout <- usedf$ICVIout + usedf$CAout
+usedf$headtotout <- usedf$headICVIout + usedf$headCAout
+
+# Total shipments - totICVI and operations with production (no other operations)
+# all inv correlate with total ICVI shipments (and a lesser extent head in ICVI)
+# !!! counties with low inventory did not receive a CA - 
+# so the CA indicates (so only if > 300 pigs/county) 
+# REALLY THEY ARE CAPTURING DIFFERENT COUNTIES
+##########################################
+pairs(usedf[, c(2:4, 16:21)], log = "xy", pch = 19, cex = 0.6) # operations
+pairs(usedf[, c(5:7, 16:21)], log = "xy", pch = 19, cex = 0.6) # inventory
+    
+# In shipments - 
+# ICVIin & CAin with owprod, owi, less breeding; combined not an improvement likely because different counties
+# all inv correlate in ICVI & CA shipments BUT counties with low inv not in CA data!!!!!
+# combined is an improvement - because capturing different counties
+##########################################
+pairs(usedf[, c(2:4, 8, 10, 12, 14, 22:23)], log = "xy", pch = 19, cex = 0.6) # operations
+pairs(usedf[, c(5:7, 8, 10, 12, 14, 22:23)], log = "xy", pch = 19, cex = 0.6) # inventory
+
+# Out shipments - ICVI out and breeding inventory
+##########################################
+pairs(usedf[, c(2:4, 9, 11, 13, 15, 24:25)], log = "xy", pch = 19, cex = 0.6) # operations
+pairs(usedf[, c(5:7, 9, 11, 13, 15, 24:25)], log = "xy", pch = 19, cex = 0.6) # inventory
+
+
+
+# End updates
+
+
+# Quick PCA of NASS covariates - need linear patterns
+# library(vegan)
+# library(ade4)
+# usedf[usedf < -100] <- NA
+# data("mite")
+# rda(X = usedf[, 2:7])
+# usedf$inv <- log(usedf$inv); usedf$invbreeding <- log(usedf$invbreeding)
+# usedf$invproduction <- log(usedf$invproduction)
+
+
 
 # Summary information for descriptive statistics
 # total number of operations with operations with production (n is overall, n2 is commuter dataset)
@@ -200,11 +319,11 @@ cor.test(n2$bri[n2$OutDegree_Ship < 600], n2$OutDegree_Ship[n2$OutDegree_Ship < 
 # 2) Calculate correlation between terms, choose covariates
 ########################################
 ########################################
-pairs(n[,2:13])
-covariates <- colnames(n)[-1]
-df <- data.frame(cov1 = rep(covariates, length.out = length(covariates), 
-	cov2 = rep(covariates, each = length(covariates)))
-cor(n$ows, n$bri, use = "pairwise.complete.obs")
+# pairs(n[,2:13])
+# covariates <- colnames(n)[-1]
+# df <- data.frame(cov1 = rep(covariates, length.out = length(covariates), 
+# 	cov2 = rep(covariates, each = length(covariates)))
+# cor(n$ows, n$bri, use = "pairwise.complete.obs")
 
 ########################################
 ########################################
