@@ -237,6 +237,36 @@ pairs(usedf[, c(5:7, 8, 10, 12, 14, 22:23)], log = "xy", pch = 19, cex = 0.6) # 
 pairs(usedf[, c(2:4, 9, 11, 13, 15, 24:25)], log = "xy", pch = 19, cex = 0.6) # operations
 pairs(usedf[, c(5:7, 9, 11, 13, 15, 24:25)], log = "xy", pch = 19, cex = 0.6) # inventory
 
+# make colored by ICVI counties; CA counties; both to show separate subsets
+# add map
+par(mfrow = c(1, 2))
+plot(log(usedf$invproduction[usedf$ICVIin > 0 & usedf$CAin > 0]+1) ~ log(usedf$totin[
+    usedf$ICVIin > 0 & usedf$CAin > 0]+1), pch = 19, cex = 0.6, col = "red", 
+    ylab = "Production inventory in head (log)", xlab = "In-shipments (log)", ylim = c(7, 15), 
+    xlim = c(1, 7))
+points(log(usedf$invproduction[usedf$ICVIin > 0]+1) ~ log(usedf$ICVIin[usedf$ICVIin > 0]+1),
+       pch = 19, cex = 0.6, col = "green")
+points(log(usedf$invproduction[usedf$CAin > 0]+1) ~ log(usedf$CAin[usedf$CAin > 0]+1), 
+       pch = 19, cex = 0.6, col = "blue")
+
+plot(log(usedf$owi[usedf$totICVI > 0 & usedf$totCA > 0]+1) ~ log(usedf$tot[
+    usedf$totICVI > 0 & usedf$totCA > 0]+1), pch = 19, cex = 0.6, col = "red", 
+    ylab = "Operations with inventory (log)", xlab = "Total shipments (log)", 
+    ylim = c(1, 7), xlim = c(1, 7))
+points(log(usedf$owi[usedf$totICVI > 0]+1) ~ log(usedf$totICVI[usedf$totICVI > 0]+1),
+       pch = 19, cex = 0.6, col = "green")
+points(log(usedf$owi[usedf$totCA > 0] + 1) ~ log(usedf$totCA[usedf$totCA > 0]+1), 
+       pch = 19, cex = 0.6, col = "blue")
+
+# Out
+# plot(log(usedf$invbreeding[usedf$ICVIout > 0 & usedf$CAout > 0]+1) ~ log(usedf$totout[
+#     usedf$ICVIout > 0 & usedf$CAout > 0]+1), pch = 19, cex = 0.6, col = "red", 
+#     ylab = "Breeding inventory (head, log)", xlab = "Out-shipments (log)", ylim = c(1, 12), 
+#     xlim = c(1, 7))
+# points(log(usedf$invbreeding[usedf$ICVIout > 0]+1) ~ log(usedf$ICVIout[usedf$ICVIout > 0]+1),
+#        pch = 19, cex = 0.6, col = "green")
+# points(log(usedf$invbreeding[usedf$CAout > 0] + 1) ~ log(usedf$CAout[usedf$CAout > 0]+1), 
+#        pch = 19, cex = 0.6, col = "blue")
 
 
 # End updates
