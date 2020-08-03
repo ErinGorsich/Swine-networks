@@ -70,6 +70,7 @@ cvi2011 <- data.cvi[data.cvi$SAMPLE_YEAR2=="2011",]
 ########################################
 
 ## functions used
+########################################
 newcol <- NA
 standardize = function(column){
 	for (i in 1:length(column)){
@@ -166,6 +167,34 @@ for (file in files){
 }
 colnames(newdf) <- c("FIPS", names(files))
 
+
+# By size subset
+size <- read.csv("NASS/2012_NASS_HOGS_Inventory_by_size.csv")
+df <- size[!is.na(size$County.ANSI),]
+# create FIPS column, that merges the StateID and column ID
+for (i in 1:length(df[,1])){
+    if (df$County.ANSI[i] < 10) {
+        df$FIPS[i] <- paste(df$State.ANSI[i], df$County.ANSI[i], sep = "00")
+    } else if (df$County.ANSI[i] < 100 & df$County.ANSI[i] >= 10){
+        df$FIPS[i] <- paste(df$State.ANSI[i], df$County.ANSI[i], sep = "0")
+    } else {df$FIPS[i] <- paste(
+        df$State.ANSI[i], df$County.ANSI[i], sep = "")
+    }	
+}
+
+small <- 
+med <- 
+large <- 
+# Subset and rename things so it is easier to work with
+newdataframe <- df[ , colnames(dataframe) %in% c(
+    "Year", "State.ANSI", "County.ANSI", "Value2", "FIPS")]
+new <- data.frame(FIPS = newdataframe$FIPS, year = newdataframe$Year, 
+                  stateFIPS = newdataframe$State.ANSI, 
+                  countyFIPS = newdataframe$County.ANSI, 
+                  value = newdataframe$Value2)
+
+# Plots
+########################################
 # Note OWI, sales, market, (to a lesser extent production) were all highly correlated. 
 # % breeding or total is useful because stratified with total
 pairs(newdf[ ,2:6], pch = 19, cex = 0.7)
@@ -176,6 +205,8 @@ pairs(newdf[ ,c(2:3, 7:10)], pch = 19, cex = 0.7)
 usedf <- newdf[ , c('FIPS', "owi", "owbreeding", "owproduction", 
                     "inv", "invbreeding", "invproduction")]
 pairs(usedf[2:7])
+
+
 
 ########################################
 ########################################
